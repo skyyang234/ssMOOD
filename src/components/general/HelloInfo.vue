@@ -20,7 +20,7 @@ const logCopyright = () => {
     'color:rgb(93, 116, 162); font-size:12px;'
   );
   console.log(
-    `%c${"Designed by Jinchen Li"}`,
+    `%c${"Original by Jinchen Li · Maintained by Yang Tian"}`,
     'color:rgb(93, 116, 162); font-size:12px;'
   );
 };

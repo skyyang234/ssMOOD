@@ -1,33 +1,17 @@
 <?php
-include 'config.php';
+require_once __DIR__ . '/helpers.php';
 
-$conn = new mysqli($servername, $username, $password, $dbname);
-if ($conn->connect_error) {
-    die("连接失败: " . $conn->connect_error);
-}
+$conn = getDb();
+$rows = fetchAll($conn, 'SELECT p.species, COUNT(*) AS count FROM sample s JOIN project p ON s.project_id = p.project_id WHERE p.species IN ("mouse", "human") GROUP BY p.species');
 
-
-// 查询 mouse 和 human 的数量
-$query = "SELECT species, COUNT(*) as count FROM datasets WHERE species IN ('mouse', 'human') GROUP BY species";
-$result = $conn->query($query);
-
-// 初始化结果数组
 $resultArray = [
     'mouse' => 0,
     'human' => 0
 ];
 
-// 获取查询结果
-if ($result) {
-    while ($row = $result->fetch_assoc()) {
-        $resultArray[$row['species']] = $row['count'];
-    }
-    $result->free();
+foreach ($rows as $row) {
+    $resultArray[$row['species']] = (int)$row['count'];
 }
 
-// 关闭数据库连接
 $conn->close();
-
-echo json_encode($resultArray);
-
-?>
+jsonOut($resultArray);

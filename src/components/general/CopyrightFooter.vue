@@ -3,7 +3,7 @@
 
     <!-- 左下角悬浮气泡 -->
     <el-tooltip
-      content="Copyright © 2025 Jinchen Li. All rights reserved."
+      content="Copyright © 2025 Jinchen Li (v1.x) · Yang Tian (v2.x+, maintainer). All rights reserved."
       placement="right"
       effect="light"
     >

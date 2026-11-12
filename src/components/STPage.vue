@@ -4,6 +4,7 @@
     <main>
       <section class="page-section">
         <div class="main-container">
+
           <!--##################################################-->
           <!--详细信息容器-->
           <div class="information-container">
@@ -16,7 +17,7 @@
               <div class="information-left">
                 <h1>{{ $t('std2') }}</h1>
 
-                <p><span class="bold-black">{{ $t('std3') }}</span>: {{ dataset.dataset_id }}</p>
+                <p><span class="bold-black">{{ $t('std3') }}</span>: {{ dataset.display_name || dataset.dataset_id }}</p>
                 <p><span class="bold-black">{{ $t('std4') }}</span>: {{ dataset.species }}</p>
                 <p><span class="bold-black">{{ $t('std5') }}</span>: {{ dataset.area }}</p>
                 <p><span class="bold-black">{{ $t('std6') }}</span>: {{ dataset.conditions }}</p>
@@ -30,22 +31,20 @@
                   dataset.clusters }}</p>
               </div>
               <div class="information-right">
-                <h2>{{ $t('scd12') }}</h2>
-
-                <p><span class="bold-black">{{ $t('scd13') }}</span>: {{ dataset.information.DatasetSource1.Title }}</p>
-                <p><span class="bold-black">{{ $t('scd14') }}</span>: {{ dataset.information.DatasetSource1.Methodology
-                  }}</p>
-                <p><span class="bold-black">{{ $t('scd15') }}</span>: {{ dataset.information.DatasetSource1.Protocol }}
-                </p>
-                <p><span class="bold-black">{{ $t('scd16') }}</span>: {{ dataset.information.DatasetSource1.PublicDataID
-                  }}</p>
-                <p><span class="bold-black">{{ $t('scd18') }}</span>: <a
-                    :href="'http://doi.org/' + dataset.information.DatasetSource1.DOI" target="_blank">{{
-                      dataset.information.DatasetSource1.DOI }}</a>
-
-                </p>
-                <p><span class="bold-black">{{ $t('scd19') }}</span>: {{ dataset.information.DatasetSource1.Statement }}
-                </p>
+                <div v-for="source in datasetSources" :key="source.key">
+                  <h2>{{ $t(source.labelKey) }}</h2>
+                  <p v-if="source.data.Title"><span class="bold-black">{{ $t('scd13') }}</span>: {{ source.data.Title }}</p>
+                  <p v-if="source.data.Methodology"><span class="bold-black">{{ $t('scd14') }}</span>: {{ source.data.Methodology }}</p>
+                  <p v-if="source.data.Protocol"><span class="bold-black">{{ $t('scd15') }}</span>: {{ source.data.Protocol }}</p>
+                  <p v-if="source.data.PublicDataID"><span class="bold-black">{{ $t('scd16') }}</span>: {{ source.data.PublicDataID }}</p>
+                  <p v-if="source.data.Pubmed"><span class="bold-black">{{ $t('scd17') }}</span>: <a
+                      :href="'http://www.ncbi.nlm.nih.gov/pubmed/' + source.data.Pubmed" target="_blank">{{
+                        source.data.Pubmed }}</a></p>
+                  <p v-if="source.data.DOI"><span class="bold-black">{{ $t('scd18') }}</span>: <a
+                      :href="'http://doi.org/' + source.data.DOI" target="_blank">{{ source.data.DOI }}</a></p>
+                  <p v-if="source.data.Statement"><span class="bold-black">{{ $t('scd19') }}</span>: {{ source.data.Statement }}</p>
+                </div>
+                <p v-if="!datasetSources.length">{{ $t('scd_no_source') }}</p>
               </div>
             </div>
           </div>
@@ -58,58 +57,83 @@
                 <h1>{{ $t('std14') }}</h1>
               </div>
             </div>
-            <div class="information-content">
-              <div class="information-left">
-                <h1>{{ $t('std17') }}</h1>
-                <div class="marker-size-controller">
-                  <span class="label">{{ $t('std16') }}:</span>
-                  <el-input-number v-model="markerSize1" :min="1" :max="100" :step="1" size="small" controls-position=""
-                    @change="updateUmap1" />
+            <div class="information-content plot-comparison-grid">
+              <div class="information-left plot-panel">
+                <div class="plot-panel-header">
+                  <h1>{{ $t('std17') }}</h1>
+                  <div class="marker-size-controller plot-toolbar">
+                    <span class="label">{{ $t('std16') }}:</span>
+                    <el-input-number v-model="markerSize1" :min="1" :max="100" :step="1" size="small" controls-position=""
+                      @change="updateUmap1" />
+                  </div>
                 </div>
                 <!-- coord_chart的容器 -->
-                <div style="position: relative; width: 100%; aspect-ratio: 1 / 1;">
+                <div class="plot-square-card">
                   <!-- 加载图 -->
-                  <img v-if="coord_chartLoading" src="/loading.gif" alt="Loading"
-                    style="position: absolute;inset: 0;margin: auto;width: 80%;height: 80%;object-fit: contain;z-index: 1;" />
-                  <div id="coord_chart"
-                    :style="{ width: '100%', aspectRatio: '1 / 1', visibility: coord_chartLoading ? 'hidden' : 'visible' }">
+                  <img v-if="coord_chartLoading" src="/loading.gif" alt="Loading" class="plot-loading" />
+                  <div id="coord_chart" class="plot-square"
+                    :style="{ visibility: coord_chartLoading ? 'hidden' : 'visible' }">
                   </div>
                 </div>
               </div>
-              <div class="information-right">
-                <h1>{{ $t('std19') }}</h1>
-                <div class="gene-search-con">
-                  <el-input v-model="searchQuery" :placeholder="$t('scd24')" @focus="showScroller = true"
-                    @blur="handleBlur" class="search-gene-input" clearable size="">
-                    <template #append>
-                      <el-button @click="searchgene" type="primary">
+              <div class="information-right plot-panel">
+                <div class="plot-panel-header">
+                  <div class="overlay-mode-tabs">
+                    <span class="overlay-tab" :class="{ active: overlayMode === 'gene' }" @click="switchOverlayMode('gene')">
+                      {{ $t('scd23_gene_expression') }}
+                    </span>
+                    <span class="overlay-tab" :class="{ active: overlayMode === 'gwas' }" @click="switchOverlayMode('gwas')">
+                      {{ $t('scd23_gwas_score') }}
+                    </span>
+                  </div>
+                  <div class="gene-search-con overlay-controls plot-toolbar">
+                    <template v-if="overlayMode === 'gene'">
+                      <div class="overlay-gene-search">
+                        <el-input v-model="searchQuery" :placeholder="$t('scd24')" @focus="showScroller = true"
+                          @blur="handleBlur" class="search-gene-input" clearable size="default">
+                          <template #append>
+                            <el-button @click="searchOverlay" type="primary">
+                              {{ $t('scd21button') }}
+                            </el-button>
+                          </template>
+                        </el-input>
+                        <!--虚拟下拉列表-->
+                        <div v-show="showScroller" class="scroller-wrapper overlay-scroller" ref="scrollContainer">
+                          <VirtualList :data-key="'id'" :data-sources="filteredGenes" :keeps="100" :estimate-size="50"
+                            :data-component="VirtualListItem" style="height: 400px; overflow-y: auto" class="scroller">
+                          </VirtualList>
+                        </div>
+                      </div>
+                    </template>
+
+                    <template v-else>
+                      <el-select v-model="selectedGwasTraitId" filterable clearable class="search-gene-input"
+                        :placeholder="$t('scd23_select_trait')">
+                        <el-option v-for="trait in gwasTraits" :key="trait.id" :label="gwasTraitLabel(trait)" :value="trait.id" />
+                      </el-select>
+                      <el-button @click="searchOverlay" type="primary">
                         {{ $t('scd21button') }}
                       </el-button>
                     </template>
-                  </el-input>
-                  <!--虚拟下拉列表-->
-                  <div v-show="showScroller" class="scroller-wrapper" ref="scrollContainer">
-                    <VirtualList :data-key="'id'" :data-sources="filteredGenes" :keeps="100" :estimate-size="50"
-                      :data-component="VirtualListItem" style="height: 400px; overflow-y: auto" class="scroller">
-                    </VirtualList>
-                  </div>
-                  <div class="marker-size-control">
-                    <span class="label">{{ $t('scd22') }}:</span>
-                    <el-input-number v-model="markerSize2" :min="1" :max="100" :step="1" size="small"
-                      controls-position="" @change="updateUmap2" />
+
+                    <div class="marker-size-control">
+                      <span class="label">{{ $t('scd22') }}:</span>
+                      <el-input-number v-model="markerSize2" :min="1" :max="100" :step="1" size="small"
+                        controls-position="" @change="updateUmap2" />
+                    </div>
                   </div>
                 </div>
                 <!-- 空间基因表达量图的容器 -->
-                <div style="position: relative; width: 100%; aspect-ratio: 1 / 1;">
+                <div class="plot-square-card">
                   <!-- 加载图 -->
-                  <img v-if="coord_chartGeneLoading" src="/loading.gif" alt="Loading"
-                    style="position: absolute;inset: 0;margin: auto;width: 80%;height: 80%;object-fit: contain;z-index: 1;" />
+                  <img v-if="coord_chartGeneLoading" src="/loading.gif" alt="Loading" class="plot-loading" />
 
                   <!-- Plotly 图表容器 -->
-                  <div id="coord_chart_gene"
-                    :style="{ width: '100%', aspectRatio: '1 / 1', visibility: coord_chartGeneLoading ? 'hidden' : 'visible' }">
+                  <div id="coord_chart_gene" class="plot-square"
+                    :style="{ visibility: coord_chartGeneLoading ? 'hidden' : 'visible' }">
                   </div>
                 </div>
+
               </div>
             </div>
             <div class="information-second">
@@ -180,7 +204,7 @@
                         text-align: right;
                         font-size: 14px;
                         font-weight: bold;
-                        color: #666;
+                        color: var(--ss-text-2);
                       ">
                         {{ log2fc.toFixed(1) }}
                       </div>
@@ -214,10 +238,12 @@
 
                   <div class="de-analysis  modern-ui">
                     <el-input v-model="filterDEGGenes" :placeholder="$t('scd31')" clearable size="default" />
+                    <el-alert v-if="DEGnotice.message && DEGnotice.type !== 'info' && !loadingDEG" :title="DEGnotice.message"
+                      :type="DEGnotice.type" show-icon :closable="false" style="margin: 8px 0 12px;" />
                     <!-- 表格 -->
                     <div class="table-container">
                       <el-table :data="paginatedData" v-loading="loadingDEG" @sort-change="handleSortChange"
-                        style="width: 100%;" :default-sort="{ prop: sortProp, order: sortOrder }">
+                        style="width: 100%;" :default-sort="{ prop: sortProp, order: sortOrder }" :empty-text="DEGemptyText">
                         <el-table-column prop="i" :label="$t('scd33')" sortable="custom">
                           <template #default="{ row }">{{ row.i }}</template>
                         </el-table-column>
@@ -289,7 +315,7 @@
 
                     <el-table :data="KEGGpaginatedData" v-loading="loadingKEGG" stripe size="default"
                       style="width: 100%" :default-sort="{ prop: sortProp, order: sortOrder }"
-                      @sort-change="handleKEGGSortChange">
+                      @sort-change="handleKEGGSortChange" :empty-text="KEGGemptyText">
                       <el-table-column prop="t" :label="$t('scd44')" sortable="custom" min-width="400" />
                       <el-table-column prop="p" :label="$t('scd45')" sortable="custom">
                         <template #default="{ row }">{{ row.p.toExponential(3) }}</template>
@@ -359,7 +385,7 @@
 
                     <el-table :data="GOBPpaginatedData" v-loading="loadingGOBP" stripe size="default"
                       style="width: 100%" :default-sort="{ prop: handleGOBPSortChange, order: handleGOBPPageChange }"
-                      @sort-change="handleGOBPSortChange">
+                      @sort-change="handleGOBPSortChange" :empty-text="GOBPemptyText">
                       <el-table-column prop="t" :label="$t('scd44')" sortable="custom" min-width="400" />
                       <el-table-column prop="p" :label="$t('scd45')" sortable="custom">
                         <template #default="{ row }">{{ row.p.toExponential(3) }}</template>
@@ -428,7 +454,7 @@
 
                     <el-table :data="GOMFpaginatedData" v-loading="loadingGOMF" stripe size="default"
                       style="width: 100%" :default-sort="{ prop: handleGOMFSortChange, order: handleGOMFPageChange }"
-                      @sort-change="handleGOMFSortChange">
+                      @sort-change="handleGOMFSortChange" :empty-text="GOMFemptyText">
                       <el-table-column prop="t" :label="$t('scd44')" sortable="custom" min-width="400" />
                       <el-table-column prop="p" :label="$t('scd45')" sortable="custom">
                         <template #default="{ row }">{{ row.p.toExponential(3) }}</template>
@@ -495,9 +521,11 @@
                         size="default" />
                     </div>
 
+                    <el-alert v-if="GOCCnotice.message && GOCCnotice.type !== 'info' && !loadingGOCC" :title="GOCCnotice.message"
+                      :type="GOCCnotice.type" show-icon :closable="false" style="margin-bottom: 12px;" />
                     <el-table :data="GOCCpaginatedData" v-loading="loadingGOCC" stripe size="default"
                       style="width: 100%" :default-sort="{ prop: handleGOCCSortChange, order: handleGOCCPageChange }"
-                      @sort-change="handleGOCCSortChange">
+                      @sort-change="handleGOCCSortChange" :empty-text="GOCCemptyText">
                       <el-table-column prop="t" :label="$t('scd44')" sortable="custom" min-width="400" />
                       <el-table-column prop="p" :label="$t('scd45')" sortable="custom">
                         <template #default="{ row }">{{ row.p.toExponential(3) }}</template>
@@ -568,43 +596,159 @@
 import Plotly from 'plotly.js-dist-min';
 import VirtualListItem from './general/VirtualListItem.vue';
 import VirtualList from 'vue3-virtual-scroll-list'
-import pako from 'pako';
+
 import { ref, onMounted, computed, watch,nextTick, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
+import { ElMessage } from 'element-plus';
 //import debounce from 'lodash.debounce';
 import { QuestionFilled } from '@element-plus/icons-vue'
 //----------以下为一个ssmood页面需要的最基础的东西--------------
 import BackToTop from './general/BackToTop.vue';
 import NavigationBar from './general/NavigationBar.vue';
+
 import config from '@/config';
 //----------以上为一个ssmood页面需要的最基础的东西--------------
 import colorMap from './color_map.js';
+import { getGzipJson, getJson, parseMaybeGzipJson } from '@/utils/api';
+import { updateAgentContext, clearAgentContext } from '@/utils/agentContext';
 const route = useRoute();
 
 //------------------------------------------------------
 //加载数据集详细信息
 //------------------------------------------------------
+const defaultDs1 = () => ({
+  Title: "",
+  Methodology: "",
+  Protocol: "",
+  PublicDataID: "",
+  Pubmed: null,
+  DOI: "",
+  Statement: ""
+});
+
+const SOURCE_KEYS = ['DatasetSource1', 'DatasetSource2', 'DatasetSource3'];
+const SOURCE_LABEL_KEYS = {
+  DatasetSource1: 'scd12',
+  DatasetSource2: 'scd12-1',
+  DatasetSource3: 'scd12-2'
+};
+
+const defaultInformation = () => ({
+  DatasetSource1: defaultDs1(),
+  DatasetSource2: defaultDs1(),
+  DatasetSource3: defaultDs1()
+});
+
+// 将 v2 新版 metadata 平面的 key 映射到旧版 DatasetSource1 结构
+const METADATA_KEY_MAP = {
+  Title:        ['title', 'study_title', 'name', 'assay_title', 'dataset_title'],
+  Methodology:  ['method', 'methodology', 'technology', 'platform'],
+  Protocol:     ['protocol', 'library_protocol', 'library_prep', 'tech_protocol', 'way'],
+  PublicDataID: ['public_data_id', 'publicDataId', 'accession', 'geo_id', 'geo_accession', 'sra_id', 'geo', 'gse'],
+  DOI:          ['doi'],
+  Pubmed:       ['pubmed_id', 'pmid', 'pubmed'],
+  Statement:    ['description', 'summary', 'abstract', 'statement', 'design', 'source']
+};
+
+const SOURCE_CONTENT_FIELDS = ['Title', 'PublicDataID', 'Pubmed', 'DOI', 'Statement'];
+const hasSourceContent = (source = {}) => SOURCE_CONTENT_FIELDS.some(key => source[key] !== null && source[key] !== undefined && source[key] !== '' && source[key] !== 0 && source[key] !== '0');
+
+const normalizeToDatasetSource1 = (obj) => {
+  if (!obj || typeof obj !== 'object') return defaultDs1();
+
+  const mapped = {};
+  for (const [target, candidates] of Object.entries(METADATA_KEY_MAP)) {
+    for (const cand of candidates) {
+      if (obj[cand] !== undefined && obj[cand] !== null && obj[cand] !== '') {
+        mapped[target] = obj[cand];
+        break;
+      }
+    }
+  }
+  return { ...defaultDs1(), ...mapped };
+};
+
+const normalizeInformationSources = (obj) => {
+  const information = defaultInformation();
+  let foundSource = false;
+
+  SOURCE_KEYS.forEach(key => {
+    const sourceKey = Object.keys(obj).find(k => k.toLowerCase() === key.toLowerCase());
+    if (sourceKey && obj[sourceKey] && typeof obj[sourceKey] === 'object') {
+      information[key] = { ...defaultDs1(), ...obj[sourceKey] };
+      foundSource = true;
+    }
+  });
+
+  if (!foundSource) {
+    information.DatasetSource1 = normalizeToDatasetSource1(obj);
+  }
+  return information;
+};
+
+const parseInformation = (value) => {
+  if (!value) return defaultInformation();
+  let parsed;
+  if (typeof value === 'object') {
+    parsed = { ...value };
+  } else {
+    try {
+      parsed = JSON.parse(value);
+    } catch (e) {
+      return { ...defaultInformation(), DatasetSource1: { ...defaultDs1(), Title: String(value) } };
+    }
+  }
+  if (!parsed || typeof parsed !== 'object') return defaultInformation();
+  return normalizeInformationSources(parsed);
+};
+
 const dataset = ref({
   dataset_id: '',
   species: '',
   area: '',
-  condition: '',
+  conditions: '',
   sex: '',
   age: '',
   cells: '',
   clusters: '',
-  information: {
-    DatasetSource1: {
-      Title: "",
-      Methodology: "",
-      Protocol: "",
-      PublicDataID: "",
-      Pubmed: null,
-      DOI: "",
-      Statement: ""
-    },
-  }
+  information: defaultInformation()
 });
+
+const datasetSources = computed(() => SOURCE_KEYS
+  .map(key => ({ key, labelKey: SOURCE_LABEL_KEYS[key], data: dataset.value.information?.[key] || defaultDs1() }))
+  .filter(source => source.key === 'DatasetSource1' || hasSourceContent(source.data))
+);
+
+function spatialPrimaryAction(activeTab) {
+  const tab = String(activeTab || '').toLowerCase();
+  if (tab.includes('gene')) return 'viewing_gene_expression';
+  if (tab.includes('deg')) return 'viewing_deg_table';
+  return 'viewing_dataset_overview';
+}
+
+function syncSTAgentContext(extra = {}) {
+  const activeTab = extra.activeTab || 'spatial_detail';
+  updateAgentContext({
+    businessState: {
+      datasetId: dataset.value.dataset_id || route.params.id || '',
+      omicsType: 'ST',
+      species: dataset.value.species || '',
+      brainRegion: dataset.value.area || '',
+      condition: dataset.value.conditions || '',
+      selectedGene: searchQuery.value || '',
+      selectedCellType: cellType.value || '',
+      activeTab,
+      userPrimaryAction: extra.userPrimaryAction || spatialPrimaryAction(activeTab),
+      ...extra,
+    },
+    pageSummary: {
+      cells: dataset.value.cells || '',
+      clusters: dataset.value.clusters || '',
+    },
+  });
+}
+
 onMounted(() => {
   const params = new URLSearchParams({
     id: route.params.id // 使用 route.params 获取路由参数
@@ -618,9 +762,12 @@ onMounted(() => {
       return response.json(); // 直接解析为 JSON，而不是 text
     })
     .then(dataArray => {
-      if (dataArray && dataArray.length > 0 && dataArray[0].information) {
-        const parsedData = JSON.parse(dataArray[0].information);
-        dataset.value = { ...dataArray[0], information: parsedData }; // 使用 ref 的 value 更新数据
+      if (dataArray && dataArray.length > 0) {
+        dataset.value = {
+          ...dataArray[0],
+          information: parseInformation(dataArray[0].information || dataArray[0].detail)
+        };
+        syncSTAgentContext();
       }
 
       //console.log(dataset.value); // 打印更新后的 dataset
@@ -719,40 +866,94 @@ watch(visibleLabels, (val) => {
   }
 }, { flush: 'post' })
 
-const updateGenePlot = () => {
-  if (isSearchgene.value === true) {
-    const filteredArray = mergedGeneArray.value.filter(item =>
-      visibleLabels.value.includes(item.c)
-    );
+// 裸轴：隐藏坐标轴与网格，仅保留散点；scaleanchor 保证空间图长宽比不变形
+const buildOverlayLayout = () => ({
+  showlegend: false,
+  autosize: true,
+  margin: { t: 10, r: 60, b: 10, l: 10 },
+  xaxis: { visible: false, showgrid: false, zeroline: false },
+  yaxis: { visible: false, showgrid: false, zeroline: false, scaleanchor: 'x' },
+  paper_bgcolor: 'rgba(0,0,0,0)',
+  plot_bgcolor: 'rgba(0,0,0,0)',
+});
 
-    const categories = [...new Set(filteredArray.map(item => item.c))].sort();
-
-    const traces = categories.map(category => {
-      const categoryPoints = filteredArray.filter(point => point.c === category);
-      const colors = categoryPoints.map(point => getColor(point.nc));
-      return {
-        x: categoryPoints.map(point => point.x),
-        y: categoryPoints.map(point => point.y),
-        mode: 'markers',
-        type: 'scattergl',
-        name: category,
-        marker: {
-          color: colors,
-          size: markerSize2.value,
-        },
-        text: categoryPoints.map(point => `${point.i}<br>${point.nc}`),
-      };
-    });
-
-    const genelayout = {
-      showlegend: false,
-      autosize: true,
-      xaxis: { title: 'UMAP1' },
-      yaxis: { title: 'UMAP2', scaleanchor: "x" },
+const buildGeneOverlayTraces = (source) => {
+  const categories = [...new Set(source.map(item => item.c))].sort();
+  return categories.map(category => {
+    const categoryPoints = source.filter(point => point.c === category);
+    return {
+      x: categoryPoints.map(point => point.x),
+      y: categoryPoints.map(point => point.y),
+      mode: 'markers',
+      type: 'scattergl',
+      name: category,
+      marker: {
+        color: categoryPoints.map(point => getColor(point.nc)),
+        size: markerSize2.value,
+      },
+      text: categoryPoints.map(point => `${point.i}<br>${point.nc}`),
     };
+  });
+};
 
-    Plotly.react('coord_chart_gene', traces, genelayout);
+const buildGwasOverlayTraces = (source) => {
+  const visibleSource = source.filter(item => visibleLabels.value.includes(item.c));
+  const backgroundPoints = visibleSource.filter(point => !Number.isFinite(point.score));
+  const scoredPoints = visibleSource.filter(point => Number.isFinite(point.score));
+  const scoreValues = scoredPoints.map(point => point.score);
+  const minScore = scoreValues.length ? Math.min(...scoreValues) : 0;
+  const maxScore = scoreValues.length ? Math.max(...scoreValues) : 0;
+  const absMaxScore = Math.max(Math.abs(minScore), Math.abs(maxScore), 1e-9);
+  const traces = [];
+
+  if (backgroundPoints.length > 0) {
+    traces.push({
+      x: backgroundPoints.map(point => point.x),
+      y: backgroundPoints.map(point => point.y),
+      mode: 'markers',
+      type: 'scattergl',
+      name: 'No score',
+      marker: { color: 'rgba(190, 196, 207, 0.18)', size: Math.max(markerSize2.value - 1, 1) },
+      text: backgroundPoints.map(point => `${point.i}<br>scDRS score: NA`),
+      hoverinfo: 'text',
+    });
   }
+
+  if (scoredPoints.length > 0) {
+    traces.push({
+      x: scoredPoints.map(point => point.x),
+      y: scoredPoints.map(point => point.y),
+      mode: 'markers',
+      type: 'scattergl',
+      name: 'scDRS score',
+      marker: {
+        color: scoredPoints.map(point => point.score),
+        colorscale: [
+          [0, 'rgb(65, 105, 180)'],
+          [0.5, 'rgb(245, 245, 245)'],
+          [1, 'rgb(178, 34, 34)']
+        ],
+        cmin: -absMaxScore,
+        cmax: absMaxScore,
+        colorbar: { title: 'scDRS', thickness: 10, len: 0.55 },
+        size: Math.max(markerSize2.value + 3, 5),
+        line: { color: 'rgba(35, 39, 47, 0.55)', width: 0.8 },
+      },
+      text: scoredPoints.map(point => `${point.i}<br>scDRS score: ${point.score.toFixed(5)}`),
+      hoverinfo: 'text',
+    });
+  }
+
+  return traces;
+};
+
+const updateGenePlot = () => {
+  if (isSearchgene.value !== true) return;
+  const filteredArray = mergedGeneArray.value.filter(item => visibleLabels.value.includes(item.c));
+  const traces = overlayResultMode.value === 'gwas'
+    ? buildGwasOverlayTraces(mergedGeneArray.value)
+    : buildGeneOverlayTraces(filteredArray);
+  Plotly.react('coord_chart_gene', traces, buildOverlayLayout());
 }
 
 const updatePlot = () => {
@@ -785,16 +986,7 @@ const updatePlot = () => {
     }
   })
 
-  const layout = {
-    title: '',
-    xaxis: { title: 'coords_X' },
-    yaxis: { title: 'coords_Y', scaleanchor: "x" },
-    paper_bgcolor: 'rgba(0,0,0,0)',
-    plot_bgcolor: 'rgba(0,0,0,0)',
-    showlegend: false,
-  };
-
-  Plotly.react('coord_chart', traces, layout)
+  Plotly.react('coord_chart', traces, buildOverlayLayout())
 }
 
 
@@ -806,12 +998,17 @@ onMounted(() => {
   });
 
   fetch(`${config.apiUrl}std_getCoordinate.php?${params}`)
-    .then(response => response.arrayBuffer())
+    .then(response => {
+      if (!response.ok) {
+        return response.json().then(err => { throw new Error(err?.error || `坐标数据加载失败 (HTTP ${response.status})`); });
+      }
+      return response.arrayBuffer();
+    })
     .then(arrayBuffer => {
-      const compressed = new Uint8Array(arrayBuffer);
-      const decompressed = pako.ungzip(compressed); // 使用 pako 解压
-      const jsonString = new TextDecoder('utf-8').decode(decompressed);
-      const data = JSON.parse(jsonString); // 解析 JSON 字符串
+      const data = parseMaybeGzipJson(arrayBuffer); // 兼容 gzip 或浏览器自动解压后的 JSON
+      if (!data || !Array.isArray(data.coordinate_data)) {
+        throw new Error('坐标数据为空或格式异常');
+      }
 
       coordinate_data.value = data.coordinate_data;
       const clusterLabels = data.cluster_labels;
@@ -840,6 +1037,13 @@ onMounted(() => {
       });
       global_clusterLabels.value = clusterLabels;
       visibleLabels.value = [...clusterLabels];
+      // 用散点图的 cluster_labels（cluster_label2 优先）作为 DEG 下拉选项
+      // 这些值与 deg_result.cell_type 一致，避免 general_DEG_CellType.php 中 cell.cell_type 不匹配的问题
+      cellTypes.value = clusterLabels;
+      if (clusterLabels.length > 0) {
+        cellType.value = clusterLabels[0];
+      }
+      loadingDEG.value = false;
       const umap1 = coordinate_data.value.map(d => parseFloat(d.x));
       const umap2 = coordinate_data.value.map(d => parseFloat(d.y));
       const cellIds = coordinate_data.value.map(d => d.i);
@@ -869,14 +1073,7 @@ onMounted(() => {
         };
       });
 
-      const layout = {
-        showlegend: false,
-        title: '',
-        xaxis: { title: 'coords_X' },
-        yaxis: { title: 'coords_Y', scaleanchor: "x" },
-        paper_bgcolor: 'rgba(0,0,0,0)',
-        plot_bgcolor: 'rgba(0,0,0,0)',
-      };
+      const layout = buildOverlayLayout();
 
       Plotly.newPlot('coord_chart', traces, layout);
       
@@ -943,7 +1140,10 @@ onMounted(() => {
       
       coord_chartLoading.value = false;
     })
-    .catch(error => console.error('Error fetching UMAP data:', error));
+    .catch(error => {
+      console.error('坐标数据加载失败:', error);
+      coord_chartLoading.value = false;
+    });
 });
 
 
@@ -966,7 +1166,10 @@ onMounted(async () => {
   });
   // 绘制各数据集分布
   fetch(config.apiUrl + `std_getNumberOfCluster.php?${params}`)
-    .then(response => response.json())
+    .then(response => {
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return response.json();
+    })
     .then(dataFromPhp => {
       // 提取标签和细胞数量
       const labels = Object.keys(dataFromPhp);
@@ -1018,6 +1221,17 @@ const genes = ref([]);
 const searchQuery = ref('');
 const showScroller = ref(false);
 const markerSize2 = ref(2); // 默认点大小
+const overlayMode = ref('gene');
+const overlayResultMode = ref('gene');
+const gwasTraits = ref([]);
+const selectedGwasTraitId = ref(null);
+const gwasScoreSummary = ref(null);
+const gwasPlottedCells = ref(0);
+const gsmapAvailability = ref({ has_gsmap_spatial: false, has_gsmap_cauchy: false });
+
+
+
+
 
 
 const filteredGenes = computed(() => {
@@ -1031,7 +1245,51 @@ const filteredGenes = computed(() => {
 });
 
 
-//加载基因
+const gwasTraitLabel = (trait) => {
+  if (!trait) return '';
+  const name = trait.name || trait.full_name || trait.chinese_name || '';
+  return `${trait.abbr || trait.abbreviation || trait.id} · ${name}`;
+};
+
+
+
+const getScdrsIdVariants = (id) => {
+
+  const value = String(id ?? '').trim();
+  if (!value) return [];
+  const withoutSexSuffix = value.replace(/-(male|female)$/i, '');
+  return [...new Set([value, withoutSexSuffix])];
+};
+
+
+
+const switchOverlayMode = (mode) => {
+  if (overlayMode.value === mode) return;
+  overlayMode.value = mode;
+};
+
+const searchOverlay = () => {
+  if (overlayMode.value === 'gwas') {
+    searchGwasScore();
+  } else {
+    searchgene();
+  }
+};
+
+watch(overlayMode, () => {
+  isSearchgene.value = false;
+  mergedGeneArray.value = [];
+  gwasScoreSummary.value = null;
+  gwasPlottedCells.value = 0;
+  nextTick(() => {
+    const overlayChart = document.getElementById('coord_chart_gene');
+    const heatmapChart = document.getElementById('expressionHeatmap');
+    if (overlayChart) Plotly.purge(overlayChart);
+    if (heatmapChart) Plotly.purge(heatmapChart);
+  });
+});
+
+//加载基因和 GWAS traits
 onMounted(async () => {
   const params = new URLSearchParams({
     id: route.params.id
@@ -1041,9 +1299,7 @@ onMounted(async () => {
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    const compressed = await response.arrayBuffer();
-    const jsonStr = pako.inflate(new Uint8Array(compressed), { to: 'string' });
-    const data = JSON.parse(jsonStr);
+    const data = parseMaybeGzipJson(await response.arrayBuffer());
     if (!data || !Array.isArray(data.genes)) {
       throw new Error('Invalid data structure received');
     }
@@ -1055,7 +1311,32 @@ onMounted(async () => {
   } catch (error) {
     console.error('Failed to load genes:', error);
   }
+
+  try {
+    const data = await getJson('gwas_getTraitList.php');
+    gwasTraits.value = data.traits || [];
+    if (gwasTraits.value.length > 0) {
+      selectedGwasTraitId.value = gwasTraits.value[0].id;
+    }
+  } catch (error) {
+    console.error('Failed to load GWAS traits:', error);
+  }
+
+  try {
+    const availability = await getJson('gwas_getGsmapAvailability.php', { id: route.params.id });
+    const datasets = Array.isArray(availability.datasets) ? availability.datasets : [];
+    const datasetInfo = datasets[0] || availability;
+    gsmapAvailability.value = {
+      has_gsmap_spatial: Boolean(datasetInfo?.has_gsmap_spatial),
+      has_gsmap_cauchy: Boolean(datasetInfo?.has_gsmap_cauchy),
+    };
+  } catch (error) {
+    console.error('Failed to load GSMap availability:', error);
+  }
 });
+
+
+
 
 
 //-------------------------------------------------------------
@@ -1072,6 +1353,7 @@ onMounted(() => {
 const handleSelectItem = (item) => {
   searchQuery.value = item;
   showScroller.value = false;
+  syncSTAgentContext({ selectedGene: item || '', activeTab: 'gene_expression' });
 };
 
 // 处理失去焦点时的方法
@@ -1102,6 +1384,7 @@ const mergedGeneArray = ref([]);
 const coord_chartGeneLoading = ref(false);
 
 const searchgene = async () => {
+  syncSTAgentContext({ selectedGene: searchQuery.value || '', activeTab: 'gene_expression' });
   if (coord_chartLoading.value === false) {
     coord_chartGeneLoading.value = true;
     // 请求参数
@@ -1116,18 +1399,16 @@ const searchgene = async () => {
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        const compressed = new Uint8Array(await response.arrayBuffer());
-        const decompressed = pako.ungzip(compressed); // 使用pako解压
-
-        const data = new TextDecoder('utf-8').decode(decompressed);
-
-        jsonData = JSON.parse(data);
+        jsonData = parseMaybeGzipJson(await response.arrayBuffer());
       } catch (error) {
         console.error('Error fetching or parsing data:', error);
         // 如果发生任何错误，jsonData保持为默认的空数组
       }
 
       isSearchgene.value = true;
+      overlayResultMode.value = 'gene';
+      gwasScoreSummary.value = null;
+      gwasPlottedCells.value = 0;
       // 合并数据
       const ncMap = jsonData.reduce((acc, item) => {
         acc[item.i] = parseFloat(item.nc) || 0;
@@ -1202,16 +1483,7 @@ const searchgene = async () => {
           text: categoryPoints.map(point => `${point.i}<br>${point.nc}`), // 显示 cell_id 和 nc 信息
         };
       });
-      const genelayout = {
-        showlegend: false,
-        xaxis: {
-        },
-        yaxis: {
-          scaleanchor: "x"
-        },
-        paper_bgcolor: 'rgba(0,0,0,0)', // 可选：设置背景透明
-        plot_bgcolor: 'rgba(0,0,0,0)',
-      };
+      const genelayout = buildOverlayLayout();
       Plotly.newPlot('coord_chart_gene', traces, genelayout);
       
       // 添加缩放事件监听，让右边图的缩放同步到左边图
@@ -1333,14 +1605,127 @@ const searchgene = async () => {
 
 };
 
-// 更新 UMAP 图2 的点大小
-const updateUmap2 = () => {
-  if (isSearchgene.value === true) {
-    Plotly.restyle('coord_chart_gene', 'marker.size', [markerSize2.value]);
-    // 同步更新左边图的点大小
-    markerSize1.value = markerSize2.value;
-    Plotly.restyle('coord_chart', 'marker.size', [markerSize1.value]);
+const searchGwasScore = async () => {
+  if (coord_chartLoading.value !== false || !selectedGwasTraitId.value) return;
+  coord_chartGeneLoading.value = true;
+  try {
+    const traitId = selectedGwasTraitId.value;
+    const spatialData = await getGzipJson('gwas_getGsmapSpatialScores.php', {
+      id: route.params.id,
+      trait_id: traitId,
+      limit: 0,
+    });
+    const results = Array.isArray(spatialData.scores) ? spatialData.scores : [];
+
+    const scoreMap = results.reduce((acc, item) => {
+      const score = Number(item?.z ?? item?.beta ?? item?.score);
+      if (item.i !== undefined && Number.isFinite(score)) {
+        getScdrsIdVariants(item.i).forEach(id => {
+          acc[id] = score;
+        });
+      }
+      return acc;
+    }, {});
+    const mergedArray = coordinate_data.value.map(item => {
+      const matchedScore = getScdrsIdVariants(item.i)
+        .map(id => scoreMap[id])
+        .find(value => Number.isFinite(value));
+      return {
+        ...item,
+        score: matchedScore ?? null,
+      };
+    });
+    mergedGeneArray.value = mergedArray;
+    isSearchgene.value = true;
+    overlayResultMode.value = 'gwas';
+    gwasScoreSummary.value = {
+      ...spatialData,
+      matched_cells: results.length,
+      gsmap_available: true,
+      trait_id: traitId,
+    };
+
+    const categories = [...new Set(mergedArray.map(item => item.c))].sort();
+    const scoreValues = mergedArray.map(item => item.score).filter(value => Number.isFinite(value));
+    gwasPlottedCells.value = scoreValues.length;
+    const minScore = scoreValues.length ? Math.min(...scoreValues) : 0;
+    const maxScore = scoreValues.length ? Math.max(...scoreValues) : 0;
+    const span = maxScore - minScore;
+    const numBins = 11;
+    const heatmapData = Array.from({ length: numBins }, () => Array(categories.length).fill(0));
+
+    mergedArray.forEach(item => {
+      if (!Number.isFinite(item.score)) return;
+      const categoryIndex = categories.indexOf(item.c);
+      const binIndex = span === 0 ? Math.floor(numBins / 2) : Math.min(Math.max(Math.floor(((item.score - minScore) / span) * (numBins - 1)), 0), numBins - 1);
+      if (categoryIndex !== -1) heatmapData[binIndex][categoryIndex]++;
+    });
+
+    Plotly.newPlot('coord_chart_gene', buildGwasOverlayTraces(mergedArray), buildOverlayLayout());
+    Plotly.newPlot('expressionHeatmap', [{
+      x: categories,
+      y: Array.from({ length: numBins }, (_, i) => i),
+      z: heatmapData,
+      type: 'heatmap',
+      colorscale: [[0, 'rgba(220,220,220,0.1)'], [1, 'rgb(176,138,48)']],
+      zmin: 0,
+      zmax: Math.max(...heatmapData.flat(), 1),
+    }], {
+      autosize: true,
+      title: `GSMap spatial score distribution (${Number(gwasPlottedCells.value || 0).toLocaleString()} matched spots)`,
+      xaxis: { title: '', showgrid: false, tickangle: 45, tickfont: { size: 6 } },
+      yaxis: {
+        title: 'GSMap score',
+        tickvals: Array.from({ length: numBins }, (_, i) => i),
+        ticktext: Array.from({ length: numBins }, (_, i) => span === 0 ? minScore.toFixed(3) : (minScore + (i / (numBins - 1)) * span).toFixed(3)),
+      },
+    });
+
+    visibleLabels.value = [...global_clusterLabels.value];
+    Plotly.relayout('coord_chart', { 'xaxis.autorange': true, 'yaxis.autorange': true });
+
+    document.getElementById('coord_chart_gene').on('plotly_relayout', function(eventdata) {
+      if (eventdata && eventdata['xaxis.range[0]'] !== undefined && !isSyncingZoom.value) {
+        isSyncingZoom.value = true;
+        const xRange = [eventdata['xaxis.range[0]'], eventdata['xaxis.range[1]']];
+        const yRange = [eventdata['yaxis.range[0]'], eventdata['yaxis.range[1]']];
+        selectVisibleCellTypes(xRange, yRange);
+        Plotly.relayout('coord_chart', {
+          'xaxis.range[0]': eventdata['xaxis.range[0]'],
+          'xaxis.range[1]': eventdata['xaxis.range[1]'],
+          'yaxis.range[0]': eventdata['yaxis.range[0]'],
+          'yaxis.range[1]': eventdata['yaxis.range[1]']
+        });
+        setTimeout(() => { isSyncingZoom.value = false; }, 100);
+      }
+    });
+
+    document.getElementById('coord_chart_gene').on('plotly_doubleclick', function() {
+      visibleLabels.value = [...global_clusterLabels.value];
+      Plotly.relayout('coord_chart', { 'xaxis.autorange': true, 'yaxis.autorange': true });
+    });
+  } catch (error) {
+    console.warn('GWAS 评分暂无数据:', error.message);
+    gwasScoreSummary.value = null;
+    gwasPlottedCells.value = 0;
+    ElMessage.warning(t('std_no_score_data'));
+  } finally {
+    coord_chartGeneLoading.value = false;
   }
+};
+
+const { t } = useI18n();
+
+// 更新空间图2的点大小
+const updateUmap2 = () => {
+  if (isSearchgene.value !== true) return;
+  if (overlayResultMode.value === 'gwas') {
+    updateGenePlot();
+  } else {
+    Plotly.restyle('coord_chart_gene', 'marker.size', [markerSize2.value]);
+  }
+  markerSize1.value = markerSize2.value;
+  Plotly.restyle('coord_chart', 'marker.size', [markerSize1.value]);
 };
 
 
@@ -1356,6 +1741,21 @@ const log2fc = ref(0);
 const pageSize = ref(10);
 //const pvalue = ref(5);
 const selectedDirection = ref('all');
+
+const toNumber = (value, fallback = 0) => {
+  const num = Number(value);
+  return Number.isFinite(num) ? num : fallback;
+};
+
+const normalizeDEGRow = (item = {}) => ({
+  ...item,
+  i: item.i ?? item.gene_id ?? item.gene ?? item.feature_name ?? '',
+  fc: toNumber(item.fc ?? item.f ?? item.log2fc),
+  f: toNumber(item.f ?? item.fc ?? item.log2fc),
+  a: toNumber(item.a ?? item.padj ?? item.adjusted_pvalue ?? item.pvalue, 1),
+  t1: toNumber(item.t1 ?? item.pct1 ?? item.pct_1),
+  t2: toNumber(item.t2 ?? item.pct2 ?? item.pct_2),
+});
 
 const DEGdata = ref([]);
 const currentPage = ref(1);
@@ -1377,12 +1777,24 @@ const pValueMarks = {
   7: '0.5',
 }
 
-const formattedPValue = computed(() => {
-  const val = logPValues[pValueSliderIndex.value]
-  return val < 0.001 ? `10^${Math.log10(val).toFixed(0)}` : val.toFixed(3)
-})
+const formattedPValue = computed(() => logPValues[pValueSliderIndex.value])
 
 const loadingDEG = ref(true);
+const makeNotice = (message = '', type = 'info') => ({ message, type });
+const DEGnotice = ref(makeNotice());
+const KEGGnotice = ref(makeNotice());
+const GOBPnotice = ref(makeNotice());
+const GOMFnotice = ref(makeNotice());
+const GOCCnotice = ref(makeNotice());
+const DEGemptyText = computed(() => DEGnotice.value.message || 'No DEG records found for the selected cluster/filter.');
+const KEGGemptyText = computed(() => KEGGnotice.value.message || 'No KEGG enrichment terms found.');
+const GOBPemptyText = computed(() => GOBPnotice.value.message || 'No GO Biological Process terms found.');
+const GOMFemptyText = computed(() => GOMFnotice.value.message || 'No GO Molecular Function terms found.');
+const GOCCemptyText = computed(() => GOCCnotice.value.message || 'No GO Cellular Component terms found.');
+const requestErrorMessage = (error, label) => {
+  const msg = error?.message || String(error || 'Unknown error');
+  return msg.includes('Failed to fetch') ? `${label}: network request failed.` : `${label}: ${msg}`;
+};
 //----------------------------------
 //基因富集分析部分的变量
 const KEGGdata = ref([]);
@@ -1397,44 +1809,84 @@ const isenrichmentExpanded4 = ref("");
 //------------------------------------------------------//
 //默认加载第一个细胞类型的差异数据
 //------------------------------------------------------//
+// 当 global_clusterLabels 从坐标数据加载后，同步到 DEG 下拉（这些值与 deg_result.cell_type 一致）
+watch(global_clusterLabels, (newLabels) => {
+  if (newLabels.length > 0 && cellTypes.value.length === 0) {
+    cellTypes.value = newLabels;
+    cellType.value = newLabels[0];
+    loadingDEG.value = false;
+    console.log('[ST cellTypes] using global_clusterLabels (cluster_label2):', newLabels.length, 'types');
+  }
+}, { immediate: true });
+
+// 备用：坐标数据超时后，降级到 general_DEG_CellType.php
 onMounted(() => {
-  const params = new URLSearchParams({
-    id: route.params.id,
-  });
-  fetch(config.apiUrl + `general_DEG_CellType.php?${params}`)
-    .then((response) => response.json())
-    .then((data) => {
-      cellTypes.value = data;
-      cellType.value = cellTypes.value[0];
-      loadingDEG.value = false;
-    })
-    .catch((error) => {
-      console.error("Failed to load DEGs:", error);
-    });
+  const params = new URLSearchParams({ id: route.params.id });
+  setTimeout(() => {
+    if (cellTypes.value.length > 0) return; // 坐标数据已加载，无需fallback
+    console.log('[ST cellTypes] fallback: requesting general_DEG_CellType.php');
+    fetch(config.apiUrl + `general_DEG_CellType.php?${params}`)
+      .then((response) => response.json())
+      .then((data) => {
+        if (cellTypes.value.length > 0) return; // 坐标数据可能刚好加载完
+        cellTypes.value = data || [];
+        console.log('[ST cellTypes] loaded from fallback:', cellTypes.value.length, 'types');
+        if (cellTypes.value.length > 0) {
+          cellType.value = cellTypes.value[0];
+        }
+        loadingDEG.value = false;
+      })
+      .catch((error) => {
+        console.error("Failed to load cell types:", error);
+        if (cellTypes.value.length === 0) loadingDEG.value = false;
+      });
+  }, 5000); // 5秒后坐标数据还没到，启动fallback
 });
 
 //------------------------------------------------------//
 //检测用户更换细胞类型
 //------------------------------------------------------//
 watch(cellType, async (newcellType) => {
+  syncSTAgentContext({ selectedCellType: newcellType || '', activeTab: 'DEG' });
+  if (!newcellType) { loadingDEG.value = false; DEGnotice.value = makeNotice('No cluster selected.', 'info'); return; }
   loadingDEG.value = true;
-  //获取差异数据
+  DEGnotice.value = makeNotice();
+  // 获取差异数据 — 对 cluster 名做 trim，防止数据库字段有前后空格导致匹配失败
+  const clusterRaw = (newcellType || '').trim();
+  if (!clusterRaw) {
+    console.warn('[ST DEG] cluster name empty after trim:', JSON.stringify(newcellType));
+    loadingDEG.value = false;
+    return;
+  }
   const params = new URLSearchParams({
     id: route.params.id,
-    cluster: newcellType
+    cluster: clusterRaw
   });
-  fetch(config.apiUrl + `general_getDEG_ByCluster.php?${params}`)
-    .then((response) => response.arrayBuffer())
+  const url = config.apiUrl + `general_getDEG_ByCluster.php?${params}`;
+  console.log('[ST DEG] requesting URL:', url);
+  console.log('[ST DEG] cluster raw:', JSON.stringify(newcellType), '→ trimmed:', JSON.stringify(clusterRaw));
+  fetch(url)
+    .then((response) => {
+      console.log('[ST DEG] HTTP status:', response.status, 'for cluster:', JSON.stringify(clusterRaw));
+      return response.arrayBuffer();
+    })
     .then((arrayBuffer) => {
-      const compressed = new Uint8Array(arrayBuffer);
-      const decompressed = pako.ungzip(compressed); // 使用 pako 解压
-      const jsonString = new TextDecoder('utf-8').decode(decompressed);
-      DEGdata.value = JSON.parse(jsonString);
+      const parsed = parseMaybeGzipJson(arrayBuffer);
+      console.log('[ST DEG] parsed:', Array.isArray(parsed) ? `array[${parsed.length}]` : (parsed?.error ? 'error: ' + parsed.error : JSON.stringify(parsed)));
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        DEGdata.value = parsed.map(normalizeDEGRow);
+        console.log('[ST DEG] loaded', parsed.length, 'rows for cluster', clusterRaw);
+      } else {
+        DEGdata.value = [];
+        console.warn('[ST DEG] empty or unexpected data for cluster', clusterRaw, parsed);
+      }
       currentPage.value = 1;//回到第一页
       loadingDEG.value = false;
     })
     .catch((error) => {
-      console.error("Failed to load DEGs:", error);
+      console.error("[ST DEG] Failed to load DEGs:", error);
+      DEGdata.value = [];
+      loadingDEG.value = false;
     });
 });
 
@@ -1545,10 +1997,10 @@ const sortedData = computed(() => {
     let res = 0
     if (prop === 'i') {
       // 字符串排序
-      res = a.i.localeCompare(b.i)
+      res = String(a.i || '').localeCompare(String(b.i || ''))
     } else {
       // 数字排序
-      res = a[prop] - b[prop]
+      res = toNumber(a[prop]) - toNumber(b[prop])
     }
     return sortOrder.value === 'ascending' ? res : -res
   })
@@ -1591,6 +2043,7 @@ const getKEGG = (activeNames) => {
     // 1. 展开：开始加载
     loadingKEGG.value = true
     KEGGdata.value = []          // 先清空旧数据（防止闪旧值）
+    KEGGnotice.value = makeNotice();
 
     const genesJson = JSON.stringify(KeggGenes.value)
     const params = new FormData()
@@ -1605,11 +2058,23 @@ const getKEGG = (activeNames) => {
       body: params
     })
       .then(res => {
-        if (!res.ok) throw new Error('Network error')
-        return res.json()
+        if (!res.ok) throw new Error('Network error: ' + res.status)
+        return res.text()
       })
-      .then(data => {
-        KEGGdata.value = data
+      .then(text => {
+        try {
+          const data = JSON.parse(text)
+          if (Array.isArray(data)) {
+            console.log('[ST KEGG] loaded', data.length, 'rows')
+            KEGGdata.value = data
+          } else {
+            console.warn('[ST KEGG] non-array response:', data)
+            KEGGdata.value = []
+          }
+        } catch (e) {
+          console.warn('[ST KEGG] Server returned non-JSON:', text)
+          KEGGdata.value = []
+        }
       })
       .catch(err => {
         console.error('Failed to load KEGG:', err)
@@ -1620,6 +2085,7 @@ const getKEGG = (activeNames) => {
   } else {
     // 2. 折叠：仅清空
     KEGGdata.value = []
+    KEGGnotice.value = makeNotice()
     loadingKEGG.value = false
   }
 }
@@ -1784,14 +2250,27 @@ const getGO_BP = (activeNames) => {
     body: params
   })
     .then(res => {
-      if (!res.ok) throw new Error('Network error');
-      return res.json();
+      if (!res.ok) throw new Error('Network error: ' + res.status);
+      return res.text();
     })
-    .then(data => {
-      GOBPdata.value = data;
+    .then(text => {
+      try {
+        const data = JSON.parse(text);
+        if (Array.isArray(data)) {
+          console.log('[ST GO_BP] loaded', data.length, 'rows');
+          GOBPdata.value = data;
+        } else {
+          console.warn('[ST GO_BP] non-array response:', data);
+          GOBPdata.value = [];
+        }
+      } catch (e) {
+        console.warn('[ST GO_BP] Server returned non-JSON:', text);
+        GOBPdata.value = [];
+      }
     })
     .catch(err => {
       console.error('Failed to load GO_BP:', err);
+      GOBPnotice.value = makeNotice(requestErrorMessage(err, 'Failed to load GO_BP'), 'error');
     })
     .finally(() => {
       loadingGOBP.value = false;
@@ -1909,6 +2388,7 @@ const getGO_MF = (activeNames) => {
 
   loadingGOMF.value = true;
   GOMFdata.value = [];
+  GOMFnotice.value = makeNotice();
 
   const genesJson = JSON.stringify(GOGenes.value);
   const params = new FormData();
@@ -1922,11 +2402,23 @@ const getGO_MF = (activeNames) => {
     body: params
   })
     .then(res => {
-      if (!res.ok) throw new Error('Network error');
-      return res.json();
+      if (!res.ok) throw new Error('Network error: ' + res.status);
+      return res.text();
     })
-    .then(data => {
-      GOMFdata.value = data;
+    .then(text => {
+      try {
+        const data = JSON.parse(text);
+        if (Array.isArray(data)) {
+          console.log('[ST GO_MF] loaded', data.length, 'rows');
+          GOMFdata.value = data;
+        } else {
+          console.warn('[ST GO_MF] non-array response:', data);
+          GOMFdata.value = [];
+        }
+      } catch (e) {
+        console.warn('[ST GO_MF] Server returned non-JSON:', text);
+        GOMFdata.value = [];
+      }
     })
     .catch(err => {
       console.error('Failed to load GO_MF:', err);
@@ -2039,6 +2531,7 @@ const getGO_CC = (activeNames) => {
   const isOpen = activeNames.includes('1');
   if (!isOpen) {
     GOCCdata.value = [];
+    GOCCnotice.value = makeNotice();
     loadingGOCC.value = false;
     return;
   }
@@ -2058,14 +2551,27 @@ const getGO_CC = (activeNames) => {
     body: params
   })
     .then(res => {
-      if (!res.ok) throw new Error('Network error');
-      return res.json();
+      if (!res.ok) throw new Error('Network error: ' + res.status);
+      return res.text();
     })
-    .then(data => {
-      GOCCdata.value = data;
+    .then(text => {
+      try {
+        const data = JSON.parse(text);
+        if (Array.isArray(data)) {
+          console.log('[ST GO_CC] loaded', data.length, 'rows');
+          GOCCdata.value = data;
+        } else {
+          console.warn('[ST GO_CC] non-array response:', data);
+          GOCCdata.value = [];
+        }
+      } catch (e) {
+        console.warn('[ST GO_CC] Server returned non-JSON:', text);
+        GOCCdata.value = [];
+      }
     })
     .catch(err => {
       console.error('Failed to load GO_CC:', err);
+      GOCCnotice.value = makeNotice(requestErrorMessage(err, 'Failed to load GO_CC'), 'error');
     })
     .finally(() => {
       loadingGOCC.value = false;
@@ -2185,6 +2691,7 @@ const resizeMyChart = () => {
 };
 
 onUnmounted(() => {
+  clearAgentContext();
   // 清理事件总线
   if (eventBus) {
     eventBus.off('select-item', handleSelectItem);
@@ -2197,14 +2704,22 @@ onUnmounted(() => {
   const leftChart = document.getElementById('coord_chart');
   const rightChart = document.getElementById('coord_chart_gene');
   
-  if (leftChart) {
-    leftChart.removeAllListeners('plotly_relayout');
-    leftChart.removeAllListeners('plotly_doubleclick');
+  try {
+    if (leftChart && typeof leftChart.removeAllListeners === 'function') {
+      leftChart.removeAllListeners('plotly_relayout');
+      leftChart.removeAllListeners('plotly_doubleclick');
+    }
+  } catch (e) {
+    console.warn('cleanup leftChart events failed:', e.message);
   }
   
-  if (rightChart) {
-    rightChart.removeAllListeners('plotly_relayout');
-    rightChart.removeAllListeners('plotly_doubleclick');
+  try {
+    if (rightChart && typeof rightChart.removeAllListeners === 'function') {
+      rightChart.removeAllListeners('plotly_relayout');
+      rightChart.removeAllListeners('plotly_doubleclick');
+    }
+  } catch (e) {
+    console.warn('cleanup rightChart events failed:', e.message);
   }
   
   // 清理数据
@@ -2253,7 +2768,7 @@ th,
 td {
   padding: 8px;
   text-align: left;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid var(--ss-border);
 }
 
 .pagination {
@@ -2270,6 +2785,193 @@ button {
   /* 子元素垂直排列 */
   flex: 1;
   gap: 30px;
+}
+
+.plot-comparison-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: 24px;
+  row-gap: 14px;
+  align-items: stretch;
+}
+
+.plot-comparison-grid .information-left,
+.plot-comparison-grid .information-right {
+  width: auto;
+  min-width: 0;
+  margin: 0;
+}
+
+.plot-panel {
+  display: grid;
+  grid-row: span 2;
+  grid-template-rows: auto auto;
+  grid-template-rows: subgrid;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid var(--ss-border-soft, #e5eaf2);
+  border-radius: 12px;
+  background: linear-gradient(180deg, #fff 0%, #f8fafd 100%);
+}
+
+.plot-panel-header {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.plot-panel-header h1 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #0f172a;
+}
+
+.plot-toolbar {
+  display: flex;
+  align-items: center;
+  width: auto;
+  height: auto;
+  min-height: 40px;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--ss-border-soft, #e5eaf2);
+  border-radius: 10px;
+  background: var(--ss-bg, #f8fafc);
+}
+
+.plot-toolbar .search-gene-input {
+  flex: 1 1 220px;
+  max-width: none;
+}
+
+.plot-square-card {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border: 1px solid var(--ss-border-soft, #e5eaf2);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.plot-square {
+  width: 100%;
+  height: 100%;
+}
+
+.plot-loading {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 80%;
+  height: 80%;
+  object-fit: contain;
+  z-index: 1;
+}
+
+@media (max-width: 900px), (orientation: portrait) {
+  .plot-comparison-grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto;
+  }
+
+  .plot-panel {
+    grid-row: auto;
+    grid-template-rows: auto auto;
+  }
+}
+
+.overlay-mode-tabs {
+  display: inline-flex;
+  align-self: flex-start;
+  gap: 2px;
+  padding: 4px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+.overlay-tab {
+  padding: 6px 18px;
+  border-radius: 7px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: #64748b;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition: color .2s ease, background-color .2s ease, box-shadow .2s ease;
+}
+
+.overlay-tab:hover:not(.active) {
+  color: #334155;
+  background: rgba(255, 255, 255, .65);
+}
+
+.overlay-tab.active {
+  color: #1d4ed8;
+  font-weight: 600;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .08), 0 1px 3px rgba(15, 23, 42, .1);
+}
+.overlay-controls {
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--ss-border-soft);
+  border-radius: 10px;
+  background: var(--ss-bg);
+}
+.overlay-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.overlay-label {
+  font-size: 11px;
+  color: var(--ss-text-3);
+  white-space: nowrap;
+}
+.overlay-gene-search {
+  position: relative;
+  flex: 1 1 240px;
+}
+.overlay-scroller {
+  left: 0;
+  right: 0;
+}
+.overlay-mode-select {
+  width: 210px;
+}
+.gwas-sex-select {
+  width: 110px;
+}
+.overlay-note {
+  margin: 8px 0 0;
+  padding: 9px 11px;
+  border-left: 3px solid #b08a30;
+  background: rgba(176, 138, 48, 0.08);
+  color: var(--ss-text-2);
+  font-size: 12px;
+  line-height: 1.55;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.overlay-note strong {
+  color: var(--ss-text);
+}
+.overlay-warning {
+  color: #b45309;
+  font-weight: 600;
 }
 
 /* ----------------------------------------------------------- */

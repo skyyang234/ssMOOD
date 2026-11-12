@@ -1,79 +1,75 @@
 <?php
-include 'config.php';
+set_time_limit(300);
+require_once __DIR__ . '/helpers.php';
 
 $gene_sets = $_POST['gene_sets'] ?? '';
 $datasetId = $_POST['id'] ?? '';
-
-$conn = new mysqli($servername, $username, $password, $dbname);
-if ($conn->connect_error) {
-    file_put_contents("../log/redis_error_log.txt", "Connection failed: " . $conn->connect_error . PHP_EOL, FILE_APPEND);
-    exit;
-}
-
-// 获取 significant_genes（根据你的业务逻辑）
-// 假设 POST 中的 genes 是 JSON 数组
 $significant_genes = json_decode($_POST['genes'] ?? '[]', true);
 
+$conn = getDb();
+$projectId = null;
 if (strpos($datasetId, 'study') !== false) {
-    // 解析study部分
-    $study = explode('.', $datasetId)[0];
-    $sql = "SELECT gene_id FROM genes WHERE study_id = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("s", $study);
+    $resolved = resolveStudySamples($conn, $datasetId);
+    if (!empty($resolved['sample_ids'])) {
+        $sample = resolveSample($conn, $resolved['sample_ids'][0], null);
+        $projectId = $sample ? (int)$sample['project_id'] : null;
+    }
 } else {
-    // 获取背景基因
-    $sql = "SELECT g.gene_id FROM genes g JOIN datasets d ON g.study_id = d.study WHERE d.dataset_id = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("s", $datasetId);
+    $sample = resolveSample($conn, $datasetId, null);
+    $projectId = $sample ? (int)$sample['project_id'] : null;
 }
-$stmt->execute();
-$result = $stmt->get_result();
+
 $background_genes = [];
-while ($row = $result->fetch_assoc()) {
-    $background_genes[] = $row['gene_id'];
+if ($projectId !== null) {
+    $rows = fetchAll($conn, 'SELECT feature_name FROM feature WHERE project_id = ? AND feature_type = "gene"', 'i', $projectId);
+    foreach ($rows as $row) {
+        $background_genes[] = $row['feature_name'];
+    }
 }
-$stmt->close();
 $conn->close();
 
-// 参数校验
 if (empty($significant_genes) || empty($gene_sets) || empty($background_genes)) {
-    echo "Error: Missing genes, gene_sets or background.";
+    $missing = [];
+    if (empty($significant_genes)) $missing[] = 'genes';
+    if (empty($gene_sets)) $missing[] = 'gene_sets';
+    if (empty($background_genes)) $missing[] = 'background';
+    header('Content-Type: application/json');
+    echo json_encode(['error' => 'Missing: ' . implode(', ', $missing)]);
     exit();
 }
 
-// 构建JSON数据
 $data = json_encode([
     'significant_genes' => $significant_genes,
     'background_genes' => $background_genes,
     'gene_sets' => $gene_sets
 ]);
 
-// 运行 Python
-$command = "python3 enrichment.py";
+$command = 'python3 enrichment.py';
 $descriptorspec = [
-    0 => ["pipe", "r"],
-    1 => ["pipe", "w"],
-    2 => ["pipe", "w"]
+    0 => ['pipe', 'r'],
+    1 => ['pipe', 'w'],
+    2 => ['pipe', 'w']
 ];
-$process = proc_open($command, $descriptorspec, $pipes);
+$process = proc_open($command, $descriptorspec, $pipes, __DIR__);
 if (is_resource($process)) {
     fwrite($pipes[0], $data);
     fclose($pipes[0]);
-
     $output = stream_get_contents($pipes[1]);
     fclose($pipes[1]);
-
     $errors = stream_get_contents($pipes[2]);
     fclose($pipes[2]);
-
     proc_close($process);
-
-    if ($errors) {
-        echo "错误: $errors";
-    } else {
+    // stdout 优先：matplotlib 的警告会写 stderr，但 Python 脚本仍然成功输出 JSON 到 stdout
+    if (trim($output) !== '') {
         echo $output;
+    } else if ($errors) {
+        header('Content-Type: application/json');
+        echo json_encode(['error' => $errors]);
+    } else {
+        header('Content-Type: application/json');
+        echo json_encode([]);
     }
 } else {
-    echo "无法执行命令";
+    header('Content-Type: application/json');
+    echo json_encode(['error' => 'Cannot execute enrichment.py']);
 }
-?>

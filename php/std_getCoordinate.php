@@ -1,82 +1,53 @@
 <?php
 ini_set('memory_limit', '512M');
+require_once __DIR__ . '/helpers.php';
 
-include 'config.php';
-// 创建数据库连接
-$conn = new mysqli($servername, $username, $password, $dbname);
-if ($conn->connect_error) {
-    http_response_code(500);
-    echo "Database connection failed: " . $conn->connect_error;
-    exit;
-}
-
+$conn = getDb();
 $datasetId = $_GET['id'] ?? '';
-if (empty($datasetId)) {
-    http_response_code(400);
-    echo "Invalid or missing 'id' parameter.";
-    exit;
-}
+$sample = resolveSample($conn, $datasetId, 1);
 
-$sql = "SELECT c.spatial_cell_id, c.x_coordinate, c.y_coordinate, c.cluster_label2
-        FROM spatial_cells c
-        WHERE c.dataset_id = ?";
-$stmt = $conn->prepare($sql);
-if (!$stmt) {
-    http_response_code(500);
-    echo "SQL Prepare failed: " . $conn->error;
-    exit;
-}
-
-$stmt->bind_param("s", $datasetId);
-$stmt->execute();
-$result = $stmt->get_result();
-
-$umap_data = array();
-$cluster_labels = array();
-if ($result->num_rows > 0) {
-    while ($row = $result->fetch_assoc()) {
-        $umap_data[] = array(
-            'i' => $row['spatial_cell_id'],
-            'x' => $row['x_coordinate'],
-            'y' => $row['y_coordinate'],
-            'c' => $row['cluster_label2'],
-        );
-        $cluster_labels[$row['cluster_label2']] = true;
-    }
-} else {
-    echo "0 results";
+if (!$sample) {
     $conn->close();
+    http_response_code(404);
+    jsonOut(['error' => 'Sample not found']);
     exit;
+}
+
+$rows = fetchAll(
+    $conn,
+    'SELECT cell_id, legacy_cell_id, spatial_x, spatial_y, cell_type, cluster_label2
+     FROM cell
+     WHERE sample_id = ? AND is_spatial = 1
+     ORDER BY cell_index',
+    'i',
+    $sample['sample_id']
+);
+// 兜底：个别空转样本的 cell.is_spatial 标志未置 1（数据导入遗漏），但坐标其实存在。
+// 严格查询取不到任何行时放宽 cell 级过滤，仍要求空间坐标非空，避免把非空间细胞也算进来。
+if (!$rows) {
+    $rows = fetchAll(
+        $conn,
+        'SELECT cell_id, legacy_cell_id, spatial_x, spatial_y, cell_type, cluster_label2
+         FROM cell
+         WHERE sample_id = ? AND spatial_x IS NOT NULL AND spatial_y IS NOT NULL
+         ORDER BY cell_index',
+        'i',
+        $sample['sample_id']
+    );
+}
+
+$coordinate_data = [];
+$cluster_labels = [];
+foreach ($rows as $row) {
+    $label = clusterLabel($row);
+    $coordinate_data[] = [
+        'i' => $row['legacy_cell_id'] ?: $row['cell_id'],
+        'x' => $row['spatial_x'],
+        'y' => $row['spatial_y'],
+        'c' => $label
+    ];
+    $cluster_labels[$label] = true;
 }
 
 $conn->close();
-
-$cluster_labels = array_keys($cluster_labels);
-$response = json_encode(['coordinate_data' => $umap_data, 'cluster_labels' => $cluster_labels]);
-if (json_last_error() !== JSON_ERROR_NONE) {
-    http_response_code(500);
-    echo "JSON Error: " . json_last_error_msg();
-    exit;
-}
-
-if (!function_exists('zlib_encode')) {
-    http_response_code(500);
-    echo "Zlib compression not available.";
-    exit;
-}
-
-$compressed = zlib_encode($response, ZLIB_ENCODING_GZIP);
-//header('Content-Type: application/json');
-// 返回 JSON 数据
-header('Content-Type: application/octet-stream');
-    // 清除缓冲区并关闭输出缓冲
-ob_clean();
-flush();
-echo $compressed;
-
-//内存统计
-//$peakMemory = memory_get_peak_usage();
-// 将峰值内存使用情况写入日志文件
-//$logEntry = date("Y-m-d H:i:s") . "[". __FILE__ ."] - 峰值内存使用量：" . $peakMemory/1024 . " KB\n";
-//file_put_contents($logFile, $logEntry, FILE_APPEND);
-?>
+gzipJson(['coordinate_data' => $coordinate_data, 'cluster_labels' => array_values(array_keys($cluster_labels))]);

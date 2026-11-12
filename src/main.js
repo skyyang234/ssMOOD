@@ -34,7 +34,11 @@ app.provide('eventBus', eventBus);
 app.use(ElementPlus)
 // 挂载应用
 app.mount('#app');
-window.addEventListener('DOMContentLoaded', () => {
-  const loader = document.getElementById('app-loading')
-  if (loader) loader.style.display = 'none'
-})
+// 等 Vue 渲染就绪 + 留足动画展示时间后关闭 loading
+setTimeout(() => {
+  const loader = document.getElementById('ss-loader')
+  if (loader) {
+    loader.classList.add('done')
+    setTimeout(() => { if (loader) loader.style.display = 'none' }, 800)
+  }
+}, 3500)

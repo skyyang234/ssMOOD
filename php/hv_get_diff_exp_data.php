@@ -1,38 +1,19 @@
 <?php
-include 'config.php';
+require_once __DIR__ . '/helpers.php';
 
-// 创建数据库连接
-$conn = new mysqli($servername, $username, $password, $dbname);
+$conn = getDb();
 
-// 检查连接
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+$projectId = isset($_GET['project_id']) ? (int)$_GET['project_id'] : 1;
+$rows = fetchAll(
+    $conn,
+    'SELECT f.feature_name AS gene_id, d.cell_type AS cluster_label, d.padj AS p_value, d.log2fc AS fold_change
+     FROM deg_result d
+     JOIN feature f ON d.feature_id = f.feature_id
+     WHERE d.project_id = ? AND d.padj IS NOT NULL AND d.padj < 0.05
+     LIMIT 1000',
+    'i',
+    $projectId
+);
 
-// 执行查询
-$sql = "SELECT gene_id, cluster_label, p_value, fold_change
-            FROM differential_expression
-            WHERE p_value < 0.05
-            ORDER BY RAND()
-            LIMIT 1000";
-$result = $conn->query($sql);
-
-$data = array();
-
-if ($result->num_rows > 0) {
-    // 将结果存储到数组中
-    while ($row = $result->fetch_assoc()) {
-        $data[] = $row;
-    }
-}
-
-// 将数据转换为 JSON 格式
-$response = json_encode($data);
-
-
-// 返回 JSON 数据
-echo $response;
-
-// 关闭数据库连接
 $conn->close();
-?>
+jsonOut($rows);

@@ -31,7 +31,7 @@
                         <router-link to="/about">{{ $t('about') }}</router-link>
                     </li>
                 </ul>
-                <LanguageSwitcher @languageChanged="onLanguageChanged" />
+                <LanguageSwitcher />
             </nav>
         </header>
         <main>
@@ -370,10 +370,6 @@ export default {
           });
       },
       //------------------------------------------------------
-    onLanguageChanged(language) {
-      this.$i18n.locale = language;
-    },
-    //------------------------------------------------------
     
     initCharts() {
        

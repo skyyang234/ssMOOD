@@ -54,10 +54,10 @@ The **Home** page provides a comprehensive overview of the database and highligh
 The **Browse** section enables users to explore datasets in two primary categories:
 
 * **Single-cell datasets**
-  Includes both integrated datasets (aggregated from multiple studies) and individual datasets.As of August 2025, there are 626,425 cells.
+  Includes both integrated datasets (aggregated from multiple studies) and individual datasets. As of August 2025, there are 938,615 cells.
 
 * **ST datasets**
-  Also includes both integrated and individual datasets, supporting both cross-study comparisons and single-study analyses.As of August 2025, there are 5,506,379 ST datas.
+  Also includes both integrated and individual datasets, supporting both cross-study comparisons and single-study analyses. As of August 2025, there are 10,386,593 spatial spots.
 
 This section is designed to provide intuitive access to raw and processed data, facilitating downstream analyses.
 
@@ -231,6 +231,17 @@ This will launch the app on the default port **8787**. You can modify the port i
 * **Vue Router**: Routing management
 * **npm/yarn**: Package managers
 
+
+## Maintainers
+
+| Version | Role | Name |
+|---------|------|------|
+| v1.x | Original Author | 李金晨 |
+| v2.x+ | Current Maintainer & Lead Developer | 杨天 |
+
+> **Note**: All ongoing development and maintenance since v2.0 is led by **杨天**. For questions, issues, or contributions, please contact the current maintainer.
+
+---
 
 ### Citation for ssMOOD (to be updated)
 

@@ -3,8 +3,13 @@
         <NavigationBar />
         <main class="container">
             <section class="page-section">
+
                 <div v-if="loading">加载中...</div>
-                <div v-else v-html="content" class="md"></div>
+                <template v-else>
+                    <!-- Usage 页面：视频教程 -->
+                    <VideoPlayer v-if="isUsage" :locale="locale" />
+                    <div v-html="content" class="md"></div>
+                </template>
             </section>
         </main>
         <BackToTop />
@@ -12,10 +17,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useRoute } from "vue-router";
+import { useI18n } from 'vue-i18n';
 import BackToTop from "./general/BackToTop.vue";
 import NavigationBar from "./general/NavigationBar.vue";
+import VideoPlayer from "./general/VideoPlayer.vue";
+
 
 import MarkdownIt from 'markdown-it';
 import hljs from 'highlight.js';
@@ -41,8 +49,11 @@ const md = new MarkdownIt({
 });
 
 const route = useRoute();
+const { locale } = useI18n();
 const content = ref("");
 const loading = ref(true);
+
+const isUsage = computed(() => route.params.name === 'Usage');
 
 const loadMarkdown = async (name) => {
     if (!name) {
@@ -53,8 +64,20 @@ const loadMarkdown = async (name) => {
 
     try {
         loading.value = true;
-        const res = await fetch(`/doc/${name}.md`);
-        if (!res.ok) throw new Error(`文档不存在: ${name}`);
+        // 按当前语言加载对应版本文档：zh-CN 加载 _cn，zh-TW 优先 _tw，缺失时回退 _cn / 英文原版
+        const candidates = locale.value === 'zh-TW' ? [`${name}_tw`, `${name}_cn`, name]
+            : locale.value === 'zh-CN' ? [`${name}_cn`, name]
+            : [name];
+        let res = null;
+        let loadedName = name;
+        for (const candidate of candidates) {
+            res = await fetch(`/doc/${candidate}.md`);
+            if (res.ok) {
+                loadedName = candidate;
+                break;
+            }
+        }
+        if (!res || !res.ok) throw new Error(`文档不存在: ${loadedName}`);
         const text = await res.text();
         content.value = md.render(text);
     } catch (err) {
@@ -66,7 +89,7 @@ const loadMarkdown = async (name) => {
 };
 
 onMounted(() => loadMarkdown(route.params.name));
-watch(() => route.params.name, (newName) => {
+watch([() => route.params.name, locale], ([newName]) => {
     if (newName) {
         loadMarkdown(newName);
     }
@@ -84,8 +107,7 @@ watch(() => route.params.name, (newName) => {
 }
 
 .md {
-    width: 70%;
-    margin: 0 auto;
+    width: 100%;
 }
 
 /* 代码块样式优化 */

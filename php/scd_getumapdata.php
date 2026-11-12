@@ -1,62 +1,49 @@
 <?php
-include 'config.php';
-// 创建数据库连接
-$conn = new mysqli($servername, $username, $password, $dbname);
+ini_set('memory_limit', '512M');
+require_once __DIR__ . '/helpers.php';
 
-// 检查连接
-if ($conn->connect_error) {
-    // 将数据库连接错误写入日志文件
-    file_put_contents("../log/redis_error_log.txt", "Connection failed: " . $conn->connect_error . PHP_EOL, FILE_APPEND);
+$conn = getDb();
+$datasetId = $_GET['id'] ?? '';
+$sample = resolveSample($conn, $datasetId, 0);
+
+if (!$sample) {
+    $conn->close();
+    http_response_code(404);
+    jsonOut(['error' => 'Sample not found']);
     exit;
 }
 
-// 定义batch值
-$datasetId = $_GET['id'] ?? '';
+$useSingle = strtolower($_GET['scope'] ?? $_GET['sample_scope'] ?? '') === 'single';
+$xCol = $useSingle ? 'umap_single_x' : 'umap_x';
+$yCol = $useSingle ? 'umap_single_y' : 'umap_y';
 
-$sql = "SELECT c.cell_id, c.umap1, c.umap2, c.cluster_label2
-        FROM cells c
-        WHERE c.dataset_id = ?";
+$rows = fetchAll(
+    $conn,
+    "SELECT cell_id, legacy_cell_id, $xCol AS umap_x, $yCol AS umap_y, cell_type, cluster_label2
+     FROM cell
+     WHERE sample_id = ? AND is_spatial = 0 AND $xCol IS NOT NULL AND $yCol IS NOT NULL
+     ORDER BY cell_index",
+    'i',
+    $sample['sample_id']
+);
 
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("s", $datasetId);
-$stmt->execute();
-$result = $stmt->get_result();
-
-// 创建数组来存储UMAP数据和分类信息
-$umap_data = array();
-$cluster_labels = array();
-
-if ($result->num_rows > 0) {
-    // 将数据存入数组
-    while ($row = $result->fetch_assoc()) {
-        $umap_data[] = array(
-            'i' => $row['cell_id'],
-            'u1' => $row['umap1'],
-            'u2' => $row['umap2'],
-            'c' => $row['cluster_label2'],
-        );
-        $cluster_labels[$row['cluster_label2']] = true; // 收集唯一的cluster_label
-    }
-} else {
-    echo "0 results";
-    $conn->close();
-    exit;
+$umap_data = [];
+$cluster_labels = [];
+foreach ($rows as $row) {
+    $label = clusterLabel($row);
+    $umap_data[] = [
+        'i' => $row['legacy_cell_id'] ?: $row['cell_id'],
+        'u1' => $row['umap_x'],
+        'u2' => $row['umap_y'],
+        'c' => $label
+    ];
+    $cluster_labels[$label] = true;
 }
 
 $conn->close();
-
-// 将分类信息转换为数组
-$cluster_labels = array_keys($cluster_labels);
-
-// 将数据和分类信息转换为JSON格式
-$response = json_encode(['umap_data' => $umap_data, 'cluster_labels' => $cluster_labels]);
-
-$compressed = zlib_encode($response, ZLIB_ENCODING_GZIP);
-// 返回 JSON 数据
-header('Content-Type: application/octet-stream');
-    // 清除缓冲区并关闭输出缓冲
-ob_clean();
-flush();
-echo $compressed;
-//echo $response;
-?>
+gzipJson([
+    'umap_data' => $umap_data,
+    'cluster_labels' => array_values(array_keys($cluster_labels)),
+    'sample_scope' => $useSingle ? 'single' : 'integrated',
+    'is_integrated' => !$useSingle
+]);

@@ -4,6 +4,7 @@
     <main ref="pageSection">
       <section class="page-section">
         <div class="main-container">
+
           <!--##################################################-->
           <!--详细信息容器-->
           <div class="information-container">
@@ -16,12 +17,13 @@
               <div class="information-left">
                 <h1>{{ $t('scd2') }}</h1>
 
-                <p><span class="bold-black">{{ $t('scd3') }}</span>: {{ dataset.study_id }}</p>
+                <p><span class="bold-black">{{ $t('scd3') }}</span>: {{ integratedStudyName(dataset.study_id, $t) }}</p>
                 <p><span class="bold-black">{{ $t('scd4') }}</span>: {{ dataset.species }}</p>
-                <p><span class="bold-black">{{ $t('scd5') }}</span>: {{ dataset.area }}</p>
-                <p><span class="bold-black">{{ $t('scd6') }}</span>: {{ dataset.conditions }}</p>
-                <p><span class="bold-black">{{ $t('scd7') }}</span>: {{ dataset.sex }}</p>
-                <p><span class="bold-black">{{ $t('scd8') }}</span>: {{ dataset.age }}</p>
+                <!-- 区域/条件/性别/年龄是样本级属性，整合数据集里由后端按覆盖样本上卷汇总，故标注「(汇总)」 -->
+                <p><span class="bold-black">{{ $t('scd5') }}{{ $t('meta_summary_suffix') }}</span>: {{ dataset.area }}</p>
+                <p><span class="bold-black">{{ $t('scd6') }}{{ $t('meta_summary_suffix') }}</span>: {{ dataset.conditions }}</p>
+                <p><span class="bold-black">{{ $t('scd7') }}{{ $t('meta_summary_suffix') }}</span>: {{ dataset.sex }}</p>
+                <p><span class="bold-black">{{ $t('scd8') }}{{ $t('meta_summary_suffix') }}</span>: {{ dataset.age }}</p>
                 <h2>{{ $t('scd9') }}</h2>
 
                 <p><span class="bold-black">{{ $t('scd10') }}</span>: {{
@@ -30,12 +32,19 @@
                   dataset.clusters }}</p>
 
 
-                <h1>{{ $t('scd2-1') }}</h1>
-                <p>
-                  <span v-for="(ds, index) in datasetList" :key="ds" class="dataset-link" @click="goToDataset(ds)">
-                    {{ ds }}<span v-if="index < datasetList.length - 1">, </span>
-                  </span>
-                </p>
+                <div class="covered-datasets-head">
+                  <h1>{{ $t('scd2-1') }}</h1>
+                  <span>{{ $t('integrated_dataset_total') }} {{ datasetList.length }} {{ $t('integrated_dataset_unit') }}</span>
+                </div>
+                <div class="covered-datasets-box">
+                  <!-- 与空转整合页保持一致：优先展示 display_name（如 M_I_3D_rep1），没有时回退 sample_name。
+                       :key 带上下标防止 sample_name 重复时触发 Vue 重复 key 警告；
+                       :title 悬停显示真实样本 ID，弥补 display_name 区分度不足。 -->
+                  <button v-for="(ds, idx) in datasetList" :key="`${ds}#${idx}`" class="dataset-link" :title="ds"
+                    @click="goToDataset(ds)">
+                    {{ datasetDisplayNames[idx] || ds }}
+                  </button>
+                </div>
 
 
               </div>
@@ -49,10 +58,14 @@
                 </p>
                 <p><span class="bold-black">{{ $t('scd16') }}</span>: {{ dataset.information.DatasetSource1.PublicDataID
                   }}</p>
-                <p><span class="bold-black">{{ $t('scd18') }}</span>: <a
+                <p v-if="dataset.information.DatasetSource1.Pubmed"><span class="bold-black">{{ $t('scd17') }}</span>: <a
+                    :href="'http://www.ncbi.nlm.nih.gov/pubmed/' + dataset.information.DatasetSource1.Pubmed" target="_blank">{{
+                      dataset.information.DatasetSource1.Pubmed }}</a></p>
+                <!-- 占位文案（如 Public release upon publication）不是真 DOI，不能渲染成 doi.org 外链 -->
+                <p><span class="bold-black">{{ $t('scd18') }}</span>: <a v-if="isRealDoi(dataset.information.DatasetSource1.DOI)"
                     :href="'http://doi.org/' + dataset.information.DatasetSource1.DOI" target="_blank">{{
-                      dataset.information.DatasetSource1.DOI }}</a>
-
+                      dataset.information.DatasetSource1.DOI }}</a><span v-else>{{
+                      dataset.information.DatasetSource1.DOI }}</span>
                 </p>
                 <p><span class="bold-black">{{ $t('scd19') }}</span>: {{ dataset.information.DatasetSource1.Statement }}
                 </p>
@@ -69,10 +82,13 @@
                 <p v-if="dataset.information.DatasetSource2.Title != ''"><span class="bold-black">{{ $t('scd16')
                 }}</span>: {{ dataset.information.DatasetSource2.PublicDataID
                     }}</p>
+                <p v-if="dataset.information.DatasetSource2.Title != '' && dataset.information.DatasetSource2.Pubmed"><span class="bold-black">{{ $t('scd17')
+                }}</span>: <a :href="'http://www.ncbi.nlm.nih.gov/pubmed/' + dataset.information.DatasetSource2.Pubmed" target="_blank">{{
+                      dataset.information.DatasetSource2.Pubmed }}</a></p>
                 <p v-if="dataset.information.DatasetSource2.Title != ''"><span class="bold-black">{{ $t('scd18')
-                }}</span>: <a :href="'http://doi.org/' + dataset.information.DatasetSource2.DOI" target="_blank">{{
-                      dataset.information.DatasetSource2.DOI }}</a>
-
+                }}</span>: <a v-if="isRealDoi(dataset.information.DatasetSource2.DOI)" :href="'http://doi.org/' + dataset.information.DatasetSource2.DOI"
+                    target="_blank">{{ dataset.information.DatasetSource2.DOI }}</a><span v-else>{{
+                      dataset.information.DatasetSource2.DOI }}</span>
                 </p>
                 <p v-if="dataset.information.DatasetSource2.Title != ''"><span class="bold-black">{{ $t('scd19')
                 }}</span>: {{ dataset.information.DatasetSource2.Statement }}
@@ -92,10 +108,13 @@
                 <p v-if="dataset.information.DatasetSource3.Title != ''"><span class="bold-black">{{ $t('scd16')
                 }}</span>: {{ dataset.information.DatasetSource3.PublicDataID
                     }}</p>
+                <p v-if="dataset.information.DatasetSource3.Title != '' && dataset.information.DatasetSource3.Pubmed"><span class="bold-black">{{ $t('scd17')
+                }}</span>: <a :href="'http://www.ncbi.nlm.nih.gov/pubmed/' + dataset.information.DatasetSource3.Pubmed" target="_blank">{{
+                      dataset.information.DatasetSource3.Pubmed }}</a></p>
                 <p v-if="dataset.information.DatasetSource3.Title != ''"><span class="bold-black">{{ $t('scd18')
-                }}</span>: <a :href="'http://doi.org/' + dataset.information.DatasetSource3.DOI" target="_blank">{{
-                      dataset.information.DatasetSource3.DOI }}</a>
-
+                }}</span>: <a v-if="isRealDoi(dataset.information.DatasetSource3.DOI)" :href="'http://doi.org/' + dataset.information.DatasetSource3.DOI"
+                    target="_blank">{{ dataset.information.DatasetSource3.DOI }}</a><span v-else>{{
+                      dataset.information.DatasetSource3.DOI }}</span>
                 </p>
                 <p v-if="dataset.information.DatasetSource3.Title != ''"><span class="bold-black">{{ $t('scd19')
                 }}</span>: {{ dataset.information.DatasetSource3.Statement }}
@@ -113,65 +132,94 @@
                 <h1>{{ $t('scd20') }}</h1>
               </div>
             </div>
-            <div class="information-content">
+            <el-alert v-if="missingSamples.length" type="warning" :closable="false" class="data-missing-alert">
+              <span>{{ $t('study_missing_samples') }}</span>
+              <strong>{{ missingSamples.join(', ') }}</strong>
+            </el-alert>
+            <el-alert v-if="hasIntegratedUmap === false && !umapData.length" type="info" :closable="false"
+              class="data-missing-alert">
+              <span>{{ $t('study_no_integrated_umap') }}</span>
+            </el-alert>
+            <div class="information-content plot-comparison-grid">
 
-              <div class="information-left">
-
-                <h1>{{ $t('scd21') }}</h1>
-
-                <div class="marker-size-control">
-                  <span class="label">{{ $t('scd22') }}:</span>
-                  <el-input-number v-model="markerSize1" :min="1" :max="100" :step="1" size="small" controls-position=""
-                    @change="updateUmap1" />
+              <div class="information-left plot-panel">
+                <div class="plot-panel-header">
+                  <h1>{{ $t('scd21') }}</h1>
+                  <div class="marker-size-control plot-toolbar">
+                    <span class="label">{{ $t('scd22') }}:</span>
+                    <el-input-number v-model="markerSize1" :min="1" :max="100" :step="1" size="small" controls-position=""
+                      @change="updateUmap1" />
+                  </div>
                 </div>
 
                 <!-- UMAP图的容器 -->
-                <div style="position: relative; width: 100%; aspect-ratio: 1 / 1;">
+                <div class="plot-square-card">
                   <!-- 加载图 -->
-                  <img v-if="umapLoading" src="/loading.gif" alt="Loading"
-                    style="position: absolute;inset: 0;margin: auto;width: 80%;height: 80%;object-fit: contain;z-index: 1;" />
+                  <img v-if="umapLoading" src="/loading.gif" alt="Loading" class="plot-loading" />
 
                   <!-- Plotly 图表容器 -->
-                  <div id="umap-plot"
-                    :style="{ width: '100%', aspectRatio: '1 / 1', visibility: umapLoading ? 'hidden' : 'visible' }">
+                  <div id="umap-plot" class="plot-square"
+                    :style="{ visibility: umapLoading ? 'hidden' : 'visible' }">
                   </div>
                 </div>
               </div>
 
-              <div class="information-right">
-                <h1>{{ $t('scd23') }}</h1>
-                <div class="gene-search-con">
-                  <el-input v-model="searchQuery" :placeholder="$t('scd24')" @focus="showScroller = true"
-                    @blur="handleBlur" class="search-gene-input" clearable size="default">
-                    <template #append>
-                      <el-button @click="searchgene" type="primary">
+              <div class="information-right plot-panel">
+                <div class="plot-panel-header">
+                  <div class="overlay-mode-tabs">
+                    <span class="overlay-tab" :class="{ active: overlayMode === 'gene' }" @click="switchOverlayMode('gene')">
+                      {{ $t('scd23_gene_expression') }}
+                    </span>
+                    <span class="overlay-tab" :class="{ active: overlayMode === 'gwas' }" @click="switchOverlayMode('gwas')">
+                      {{ $t('scd23_gwas_score') }}
+                    </span>
+                  </div>
+                  <div class="gene-search-con overlay-controls plot-toolbar">
+                    <template v-if="overlayMode === 'gene'">
+                      <div class="overlay-gene-search">
+                        <el-input v-model="searchQuery" :placeholder="$t('scd24')" @focus="showScroller = true"
+                          @blur="handleBlur" class="search-gene-input" clearable size="default">
+                          <template #append>
+                            <el-button @click="searchOverlay" type="primary">
+                              {{ $t('scd21button') }}
+                            </el-button>
+                          </template>
+                        </el-input>
+                        <!--虚拟下拉列表-->
+                        <div v-show="showScroller" class="scroller-wrapper overlay-scroller" ref="scrollContainer">
+                          <VirtualList :data-key="'id'" :data-sources="filteredGenes" :keeps="100" :estimate-size="50"
+                            :data-component="VirtualListItem" style="height: 400px; overflow-y: auto" class="scroller">
+                          </VirtualList>
+                        </div>
+                      </div>
+                    </template>
+
+                    <template v-else>
+                      <el-select v-model="selectedGwasTraitId" filterable clearable class="search-gene-input"
+                        :placeholder="$t('scd23_select_trait')">
+                        <el-option v-for="trait in gwasTraits" :key="trait.id" :label="gwasTraitLabel(trait)" :value="trait.id" />
+                      </el-select>
+                      <el-button @click="searchOverlay" type="primary">
                         {{ $t('scd21button') }}
                       </el-button>
                     </template>
-                  </el-input>
-                  <!--虚拟下拉列表-->
-                  <div v-show="showScroller" class="scroller-wrapper" ref="scrollContainer">
-                    <VirtualList :data-key="'id'" :data-sources="filteredGenes" :keeps="100" :estimate-size="50"
-                      :data-component="VirtualListItem" style="height: 400px; overflow-y: auto" class="scroller">
-                    </VirtualList>
-                  </div>
-                  <div class="marker-size-control">
-                    <span class="label">{{ $t('scd22') }}:</span>
-                    <el-input-number v-model="markerSize2" :min="1" :max="100" :step="1" size="small"
-                      controls-position="" @change="updateUmap2" />
+
+                    <div class="marker-size-control">
+                      <span class="label">{{ $t('scd22') }}:</span>
+                      <el-input-number v-model="markerSize2" :min="1" :max="100" :step="1" size="small"
+                        controls-position="" @change="updateUmap2" />
+                    </div>
                   </div>
                 </div>
 
-
                 <!-- UMAP基因表达量图的容器 -->
-                <div style="position: relative; width: 100%; aspect-ratio: 1 / 1;">
+                <div class="plot-square-card">
                   <!-- 加载图 -->
-                  <img v-if="umapGeneLoading" src="/loading.gif" alt="Loading"
-                    style="position: absolute;inset: 0;margin: auto;width: 80%;height: 80%;object-fit: contain;z-index: 1;" />
+                  <img v-if="umapGeneLoading" src="/loading.gif" alt="Loading" class="plot-loading" />
 
                   <!-- Plotly 图表容器 -->
-                  <div id="umap-chart-gene"
-                    :style="{ width: '100%', aspectRatio: '1 / 1', visibility: umapGeneLoading ? 'hidden' : 'visible' }">
+                  <div id="umap-chart-gene" class="plot-square"
+                    :style="{ visibility: umapGeneLoading ? 'hidden' : 'visible' }">
                   </div>
                 </div>
               </div>
@@ -632,21 +680,33 @@ import Plotly from 'plotly.js-dist-min';
 //import VirtualList from 'vue-virtual-scroll-list';
 import VirtualListItem from './general/VirtualListItem.vue';
 import VirtualList from 'vue3-virtual-scroll-list'
-import pako from 'pako';
-import { ref, onMounted, computed, watch, nextTick } from 'vue';
+
+import { ref, onMounted, computed, watch, nextTick, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
+import { ElMessage } from 'element-plus';
 //import VueVirtualScrollGrid from 'vue-virtual-scroll-grid';
 //import debounce from 'lodash.debounce';
 //----------以下为一个ssmood页面需要的最基础的东西--------------
 import BackToTop from './general/BackToTop.vue';
 import NavigationBar from './general/NavigationBar.vue';
+
 import config from '@/config';
 //----------以上为一个ssmood页面需要的最基础的东西--------------
 import colorMap from './color_map.js';
+import { getJson, getGzipJson, parseMaybeGzipJson, normalizeBoolFlag } from '@/utils/api';
+import { updateAgentContext, clearAgentContext } from '@/utils/agentContext';
+import { integratedStudyName } from '@/utils/studyNames';
 import _merge from "lodash/merge";
 import { QuestionFilled } from '@element-plus/icons-vue'
 const route = useRoute();
 const router = useRouter();
+
+// 只有形如 10.xxxx/yyyy 的才是真 DOI。整合数据集的 DOI 常为占位文案
+// （如 Public release upon publication），若照旧拼成 http://doi.org/... 会得到一个死链。
+function isRealDoi(value) {
+  return /^10\.\d{4,9}\/\S+$/.test(String(value ?? '').trim());
+}
 
 //###################################//
 //加载数据集详细信息
@@ -700,6 +760,80 @@ function goToDataset(id) {
   router.push(`/browse/SingleCell/${id}`);
 }
 const datasetList = ref([])
+const datasetDisplayNames = ref([])
+
+const SOURCE_KEYS = ['DatasetSource1', 'DatasetSource2', 'DatasetSource3'];
+
+function emptyDatasetSource() {
+  return {
+    Title: "",
+    Methodology: "",
+    Protocol: "",
+    PublicDataID: "",
+    Pubmed: null,
+    DOI: "",
+    Statement: ""
+  };
+}
+
+function emptyStudyInformation() {
+  return {
+    DatasetSource1: emptyDatasetSource(),
+    DatasetSource2: emptyDatasetSource(),
+    DatasetSource3: emptyDatasetSource(),
+  };
+}
+
+function normalizeStudyInformation(information) {
+  return SOURCE_KEYS.reduce((acc, key) => {
+    acc[key] = { ...emptyDatasetSource(), ...(information?.[key] || {}) };
+    return acc;
+  }, {});
+}
+
+function normalizeStudyDatasetList(row) {
+  if (Array.isArray(row.datasets)) return row.datasets;
+  if (typeof row.datasets === 'string' && row.datasets.trim()) {
+    return row.datasets.split(',').map(item => item.trim()).filter(Boolean);
+  }
+  if (Array.isArray(row.sample_ids)) return row.sample_ids;
+  const text = row.sample_ids || '';
+  return String(text).split(',').map(item => item.trim()).filter(Boolean);
+}
+
+function studySingleCellPrimaryAction(activeTab) {
+  const tab = String(activeTab || '').toLowerCase();
+  if (tab.includes('gene')) return 'viewing_gene_expression';
+  if (tab.includes('deg')) return 'viewing_deg_table';
+  return 'viewing_dataset_overview';
+}
+
+function syncStudySingleCellAgentContext(extra = {}) {
+  const activeTab = extra.activeTab || 'single_cell_study_detail';
+  updateAgentContext({
+    // 页面自描述：研究页有整合 UMAP（真实存在），没有页面级筛选条
+    pageSchema: { filters: [], columns: [], charts: ['umap'] },
+    businessState: {
+      studyId: dataset.value.study_id || route.params.study || '',
+      datasetId: dataset.value.study_id || route.params.study || '',
+      omicsType: 'SC',
+      species: dataset.value.species || '',
+      brainRegion: dataset.value.area || '',
+      condition: dataset.value.conditions || dataset.value.condition || '',
+      selectedGene: searchQuery.value || '',
+      selectedCellType: cellType.value || '',
+      activeTab,
+      userPrimaryAction: extra.userPrimaryAction || studySingleCellPrimaryAction(activeTab),
+      ...extra,
+    },
+    pageSummary: {
+      cells: dataset.value.cells || '',
+      clusters: dataset.value.clusters || '',
+      datasets: datasetList.value.join(', '),
+    },
+  });
+}
+
 onMounted(() => {
   console.log(route.params.study);
   const params = new URLSearchParams({
@@ -714,19 +848,27 @@ onMounted(() => {
       return response.json();
     })
     .then(data => {
-      if (data && data.length > 0 && data[0].information) {
-        const raw = { ...dataset.value, ...data[0] };
+      if (data && data.length > 0) {
+        const row = data[0];
+        const raw = { ...dataset.value, ...row };
 
-        // 处理 information 字段，如果是字符串先解析
-        if (data[0].information) {
+        if (row.information) {
           try {
-            raw.information = JSON.parse(data[0].information);
+            raw.information = typeof row.information === 'string' ? JSON.parse(row.information) : row.information;
           } catch (e) {
-            raw.information = {};
+            raw.information = emptyStudyInformation();
           }
+        } else {
+          raw.information = emptyStudyInformation();
         }
+        raw.information = normalizeStudyInformation(raw.information);
         dataset.value = _merge({}, dataset.value, raw);
-        datasetList.value = dataset.value.datasets.split(',');
+        datasetList.value = normalizeStudyDatasetList(dataset.value);
+        datasetDisplayNames.value = (row.dataset_display_names || '').split(',').map(s => s.trim()).filter(Boolean);
+        // detail 接口同样用 missing 表达未能加载的样本
+        detailMissing.value = Array.isArray(row.missing) ? row.missing : [];
+        hasIntegratedUmap.value = normalizeBoolFlag(row.has_integrated_umap);
+        syncStudySingleCellAgentContext();
       }
     })
     .catch(error => {
@@ -740,6 +882,19 @@ onMounted(() => {
 //加载Umap图
 //###################################//
 const umapData = ref([]);
+const umapMissing = ref([]);
+// study_getDatasetDetail / ssc_getGeneExpression_bin 同样会用 missing 返回未能加载的样本
+const detailMissing = ref([]);
+const expressionMissing = ref([]);
+// study_getDatasetDetail 返回：该整合数据集是否具备整合 UMAP 坐标
+const hasIntegratedUmap = ref(null);
+// 汇总各来源的缺失样本并去重，统一提示，避免同一样本重复出现
+const missingSamples = computed(() => {
+  const set = new Set(
+    [...umapMissing.value, ...detailMissing.value, ...expressionMissing.value].filter(Boolean)
+  );
+  return Array.from(set);
+});
 const global_clusterLabels = ref([])
 const visibleLabels = ref([])
 const colors = ref({})
@@ -820,40 +975,95 @@ watch(visibleLabels, (val) => {
   }
 })
 
-const updateGenePlot = () => {
-  if (isSearchgene.value === true) {
-    const filteredArray = mergedGeneArray.value.filter(item =>
-      visibleLabels.value.includes(item.c)
-    );
+// 裸轴：隐藏坐标轴与网格，仅保留散点；r 预留色标宽度，使左右两图绘图区等宽
+const buildOverlayLayout = () => ({
+  showlegend: false,
+  autosize: true,
+  responsive: true,
+  margin: { t: 10, r: 60, b: 10, l: 10 },
+  xaxis: { visible: false, showgrid: false, zeroline: false },
+  yaxis: { visible: false, showgrid: false, zeroline: false },
+  paper_bgcolor: 'rgba(0,0,0,0)',
+  plot_bgcolor: 'rgba(0,0,0,0)',
+});
 
-    const categories = [...new Set(filteredArray.map(item => item.c))].sort();
-
-    const traces = categories.map(category => {
-      const categoryPoints = filteredArray.filter(point => point.c === category);
-      const colors = categoryPoints.map(point => getColor(point.nc));
-      return {
-        x: categoryPoints.map(point => point.u1),
-        y: categoryPoints.map(point => point.u2),
-        mode: 'markers',
-        type: 'scattergl',
-        name: category,
-        marker: {
-          color: colors,
-          size: markerSize2.value,
-        },
-        text: categoryPoints.map(point => `${point.i}<br>${point.nc}`),
-      };
-    });
-
-    const genelayout = {
-      showlegend: false,
-      autosize: true,
-      xaxis: { title: 'UMAP1' },
-      yaxis: { title: 'UMAP2' },
+const buildGeneOverlayTraces = (source) => {
+  const categories = [...new Set(source.map(item => item.c))].sort();
+  return categories.map(category => {
+    const categoryPoints = source.filter(point => point.c === category);
+    return {
+      x: categoryPoints.map(point => point.u1),
+      y: categoryPoints.map(point => point.u2),
+      mode: 'markers',
+      type: 'scattergl',
+      name: category,
+      marker: {
+        color: categoryPoints.map(point => getColor(point.nc)),
+        size: markerSize2.value,
+      },
+      text: categoryPoints.map(point => `${point.i}<br>${point.nc}`),
     };
+  });
+};
 
-    Plotly.react('umap-chart-gene', traces, genelayout);
+const buildGwasOverlayTraces = (source) => {
+  const visibleSource = source.filter(item => visibleLabels.value.includes(item.c));
+  const backgroundPoints = visibleSource.filter(point => !Number.isFinite(point.score));
+  const scoredPoints = visibleSource.filter(point => Number.isFinite(point.score));
+  const scoreValues = scoredPoints.map(point => point.score);
+  const minScore = scoreValues.length ? Math.min(...scoreValues) : 0;
+  const maxScore = scoreValues.length ? Math.max(...scoreValues) : 0;
+  const absMaxScore = Math.max(Math.abs(minScore), Math.abs(maxScore), 1e-9);
+  const traces = [];
+
+  if (backgroundPoints.length > 0) {
+    traces.push({
+      x: backgroundPoints.map(point => point.u1),
+      y: backgroundPoints.map(point => point.u2),
+      mode: 'markers',
+      type: 'scattergl',
+      name: 'No score',
+      marker: { color: 'rgba(190, 196, 207, 0.18)', size: Math.max(markerSize2.value - 1, 1) },
+      text: backgroundPoints.map(point => `${point.i}<br>scDRS score: NA`),
+      hoverinfo: 'text',
+    });
   }
+
+  if (scoredPoints.length > 0) {
+    traces.push({
+      x: scoredPoints.map(point => point.u1),
+      y: scoredPoints.map(point => point.u2),
+      mode: 'markers',
+      type: 'scattergl',
+      name: 'scDRS score',
+      marker: {
+        color: scoredPoints.map(point => point.score),
+        colorscale: [
+          [0, 'rgb(65, 105, 180)'],
+          [0.5, 'rgb(245, 245, 245)'],
+          [1, 'rgb(178, 34, 34)']
+        ],
+        cmin: -absMaxScore,
+        cmax: absMaxScore,
+        colorbar: { title: 'scDRS', thickness: 10, len: 0.55 },
+        size: Math.max(markerSize2.value + 3, 5),
+        line: { color: 'rgba(35, 39, 47, 0.55)', width: 0.8 },
+      },
+      text: scoredPoints.map(point => `${point.i}<br>scDRS score: ${point.score.toFixed(5)}`),
+      hoverinfo: 'text',
+    });
+  }
+
+  return traces;
+};
+
+const updateGenePlot = () => {
+  if (isSearchgene.value !== true) return;
+  const filteredArray = mergedGeneArray.value.filter(item => visibleLabels.value.includes(item.c));
+  const traces = overlayResultMode.value === 'gwas'
+    ? buildGwasOverlayTraces(mergedGeneArray.value)
+    : buildGeneOverlayTraces(filteredArray);
+  Plotly.react('umap-chart-gene', traces, buildOverlayLayout());
 }
 
 const updatePlot = () => {
@@ -886,16 +1096,7 @@ const updatePlot = () => {
     }
   })
 
-  const layout = {
-    responsive: true,
-    showlegend: false,
-    xaxis: { title: 'UMAP1' },
-    yaxis: { title: 'UMAP2' },
-    paper_bgcolor: 'rgba(0,0,0,0)',
-    plot_bgcolor: 'rgba(0,0,0,0)'
-  }
-
-  Plotly.react('umap-plot', traces, layout)
+  Plotly.react('umap-plot', traces, buildOverlayLayout())
 }
 
 onMounted(() => {
@@ -907,13 +1108,12 @@ onMounted(() => {
     .then(response => response.arrayBuffer())
     .then(arrayBuffer => {
 
-      const compressed = new Uint8Array(arrayBuffer);
-      const decompressed = pako.ungzip(compressed); // 使用pako解压
-      const jsonString = new TextDecoder('utf-8').decode(decompressed);
-      const data = JSON.parse(jsonString); // 解析JSON字符串
+      const data = parseMaybeGzipJson(arrayBuffer); // 兼容 gzip 或浏览器自动解压后的 JSON
 
       //console.log(data);
       umapData.value = data.umap_data;
+      // Study 接口无 404，解析失败的样本通过 missing 返回（而非报错）
+      umapMissing.value = Array.isArray(data.missing) ? data.missing : [];
       const clusterLabels = data.cluster_labels;
 
       const labelMap = new Map();
@@ -972,21 +1172,7 @@ onMounted(() => {
       });
 
 
-      const layout = {
-        title: '',
-        responsive: true,
-        showlegend: false,
-        autosize: true, // 自动适配容器大小
-        xaxis: {
-          title: 'UMAP1',
-        },
-        yaxis: {
-          title: 'UMAP2',
-        },
-        paper_bgcolor: 'rgba(0,0,0,0)',
-        plot_bgcolor: 'rgba(0,0,0,0)',
-
-      };
+      const layout = buildOverlayLayout();
 
 
       Plotly.newPlot('umap-plot', traces, layout);
@@ -1110,6 +1296,13 @@ const genes = ref([]);
 const searchQuery = ref('');
 const showScroller = ref(false);
 const markerSize2 = ref(3); // 默认点大小
+const overlayMode = ref('gene');
+const overlayResultMode = ref('gene');
+const gwasTraits = ref([]);
+const selectedGwasTraitId = ref(null);
+const gwasSex = ref('male');
+const gwasScoreSummary = ref(null);
+const gwasPlottedCells = ref(0);
 
 
 const filteredGenes = computed(() => {
@@ -1122,8 +1315,52 @@ const filteredGenes = computed(() => {
   return data;
 });
 
+const gwasTraitLabel = (trait) => {
+  if (!trait) return '';
+  const name = trait.name || trait.full_name || trait.chinese_name || '';
+  return `${trait.abbr || trait.abbreviation || trait.id} · ${name}`;
+};
 
-//加载基因
+const getScdrsIdVariants = (id) => {
+  const value = String(id ?? '').trim();
+  if (!value) return [];
+  const withoutSexSuffix = value.replace(/-(male|female)$/i, '');
+  return [...new Set([value, withoutSexSuffix])];
+};
+
+const getScdrsScoreValue = (item) => {
+  const score = Number(item?.score ?? item?.scdrs_score ?? item?.scdrsScore ?? item?.gwas_score);
+  return Number.isFinite(score) ? score : null;
+};
+
+const switchOverlayMode = (mode) => {
+  if (overlayMode.value === mode) return;
+  overlayMode.value = mode;
+};
+
+const searchOverlay = () => {
+  if (overlayMode.value === 'gwas') {
+    searchGwasScore();
+  } else {
+    searchgene();
+  }
+};
+
+watch(overlayMode, () => {
+  isSearchgene.value = false;
+  mergedGeneArray.value = [];
+  gwasScoreSummary.value = null;
+  gwasPlottedCells.value = 0;
+  nextTick(() => {
+    const overlayChart = document.getElementById('umap-chart-gene');
+    const heatmapChart = document.getElementById('expressionHeatmap');
+    if (overlayChart) Plotly.purge(overlayChart);
+    if (heatmapChart) Plotly.purge(heatmapChart);
+  });
+});
+
+
+//加载基因和 GWAS traits
 onMounted(async () => {
   const params = new URLSearchParams({
     id: route.params.study
@@ -1133,9 +1370,7 @@ onMounted(async () => {
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    const compressed = await response.arrayBuffer();
-    const jsonStr = pako.inflate(new Uint8Array(compressed), { to: 'string' });
-    const data = JSON.parse(jsonStr);
+    const data = parseMaybeGzipJson(await response.arrayBuffer());
     if (!data || !Array.isArray(data.genes)) {
       throw new Error('Invalid data structure received');
     }
@@ -1145,6 +1380,16 @@ onMounted(async () => {
     }));
   } catch (error) {
     console.error('Failed to load genes:', error);
+  }
+
+  try {
+    const data = await getJson('gwas_getTraitList.php');
+    gwasTraits.value = data.traits || [];
+    if (gwasTraits.value.length > 0) {
+      selectedGwasTraitId.value = gwasTraits.value[0].id;
+    }
+  } catch (error) {
+    console.error('Failed to load GWAS traits:', error);
   }
 });
 
@@ -1169,6 +1414,7 @@ onUnmounted(() => {
 const handleSelectItem = (item) => {
   searchQuery.value = item;
   showScroller.value = false;
+  syncStudySingleCellAgentContext({ selectedGene: item || '', activeTab: 'gene_expression' });
 };
 
 
@@ -1208,6 +1454,7 @@ const mergedGeneArray = ref([]);
 const umapGeneLoading = ref(false)
 
 const searchgene = async () => {
+  syncStudySingleCellAgentContext({ selectedGene: searchQuery.value || '', activeTab: 'gene_expression' });
   if (umapLoading.value === false) {
     umapGeneLoading.value = true
 
@@ -1223,40 +1470,18 @@ const searchgene = async () => {
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        const arrayBuffer = await response.arrayBuffer();
-        const dataView = new DataView(arrayBuffer);
-        let offset = 0; // 当前解析位置
-
-
-        // 解析每个数据块
-        while (offset < arrayBuffer.byteLength) {
-          // 读取数据块长度（4字节无符号整数）
-          const length = dataView.getUint32(offset, false);
-          offset += 4; // 移动到数据块内容
-
-          // 读取数据块内容
-          const binData = new Uint8Array(arrayBuffer, offset, length);
-          offset += length; // 移动到下一个数据块
-
-          // 解压数据块
-          const decompressed = pako.ungzip(binData);
-
-          // 解码为字符串
-          const text = new TextDecoder('utf-8').decode(decompressed);
-
-
-          // 将解析后的数据添加到数组
-          const jsonData = JSON.parse(text);
-          for (const key in jsonData) {
-            expressionData[key] = jsonData[key];
-          }
-        }
+        const payload = parseMaybeGzipJson(await response.arrayBuffer());
+        expressionData = Array.isArray(payload) ? payload : (payload.data || []);
+        // 表达接口用 { data, missing } 结构，missing 为未返回表达值的样本
+        expressionMissing.value = !Array.isArray(payload) && Array.isArray(payload?.missing) ? payload.missing : [];
       } catch (error) {
         console.error('Error fetching or parsing data:', error);
-        // 如果发生任何错误，jsonData保持为默认的空数组
       }
       //console.log(expressionData);
       isSearchgene.value = true;
+      overlayResultMode.value = 'gene';
+      gwasScoreSummary.value = null;
+      gwasPlottedCells.value = 0;
       // 合并数据
       const ncMap = expressionData.reduce((acc, item) => {
         acc[item.i] = parseFloat(item.nc) || 0;
@@ -1340,16 +1565,7 @@ const searchgene = async () => {
           text: categoryPoints.map(point => `${point.i}<br>${point.nc}`), // 显示 cell_id 和 nc 信息
         };
       });
-      const genelayout = {
-        showlegend: false,
-        autosize: true, // 自动适配容器大小
-        xaxis: {
-          title: 'UMAP1',
-        },
-        yaxis: {
-          title: 'UMAP2',
-        },
-      };
+      const genelayout = buildOverlayLayout();
       Plotly.newPlot('umap-chart-gene', traces, genelayout);
 
       // 重置左边图为初始视图,并重置勾选框为全选状态
@@ -1448,9 +1664,116 @@ const searchgene = async () => {
 
 };
 
+const searchGwasScore = async () => {
+  if (umapLoading.value !== false || !selectedGwasTraitId.value) return;
+  umapGeneLoading.value = true;
+  try {
+    const data = await getGzipJson('gwas_getCellScores.php', {
+      trait_id: selectedGwasTraitId.value,
+      sex: gwasSex.value,
+      limit: 0,
+    });
+    const scores = Array.isArray(data.scores) ? data.scores : [];
+    const scoreMap = scores.reduce((acc, item) => {
+      const score = getScdrsScoreValue(item);
+      if (item.i !== undefined && score !== null) {
+        getScdrsIdVariants(item.i).forEach(id => {
+          acc[id] = score;
+        });
+      }
+      return acc;
+    }, {});
+    const mergedArray = umapData.value.map(item => {
+      const matchedScore = getScdrsIdVariants(item.i)
+        .map(id => scoreMap[id])
+        .find(value => Number.isFinite(value));
+      return {
+        ...item,
+        score: matchedScore ?? null,
+      };
+    });
+    mergedGeneArray.value = mergedArray;
+    isSearchgene.value = true;
+    overlayResultMode.value = 'gwas';
+    gwasScoreSummary.value = data;
+
+    const categories = [...new Set(mergedArray.map(item => item.c))].sort();
+    const scoreValues = mergedArray.map(item => item.score).filter(value => Number.isFinite(value));
+    gwasPlottedCells.value = scoreValues.length;
+    const minScore = scoreValues.length ? Math.min(...scoreValues) : 0;
+    const maxScore = scoreValues.length ? Math.max(...scoreValues) : 0;
+    const span = maxScore - minScore;
+    const numBins = 11;
+    const heatmapData = Array.from({ length: numBins }, () => Array(categories.length).fill(0));
+
+    mergedArray.forEach(item => {
+      if (!Number.isFinite(item.score)) return;
+      const categoryIndex = categories.indexOf(item.c);
+      const binIndex = span === 0 ? Math.floor(numBins / 2) : Math.min(Math.max(Math.floor(((item.score - minScore) / span) * (numBins - 1)), 0), numBins - 1);
+      if (categoryIndex !== -1) heatmapData[binIndex][categoryIndex]++;
+    });
+
+    Plotly.newPlot('umap-chart-gene', buildGwasOverlayTraces(mergedArray), buildOverlayLayout());
+    Plotly.newPlot('expressionHeatmap', [{
+      x: categories,
+      y: Array.from({ length: numBins }, (_, i) => i),
+      z: heatmapData,
+      type: 'heatmap',
+      colorscale: [[0, 'rgba(220,220,220,0.1)'], [1, 'rgb(176,138,48)']],
+      zmin: 0,
+      zmax: Math.max(...heatmapData.flat(), 1),
+    }], {
+      autosize: true,
+      title: `scDRS score distribution (${Number(gwasPlottedCells.value || 0).toLocaleString()} matched cells)`,
+      xaxis: { title: '', showgrid: false, tickangle: 45, tickfont: { size: 6 } },
+      yaxis: {
+        title: 'scDRS score',
+        tickvals: Array.from({ length: numBins }, (_, i) => i),
+        ticktext: Array.from({ length: numBins }, (_, i) => span === 0 ? minScore.toFixed(3) : (minScore + (i / (numBins - 1)) * span).toFixed(3)),
+      },
+    });
+
+    visibleLabels.value = [...global_clusterLabels.value];
+    Plotly.relayout('umap-plot', { 'xaxis.autorange': true, 'yaxis.autorange': true });
+
+    document.getElementById('umap-chart-gene').on('plotly_relayout', function(eventdata) {
+      if (eventdata && eventdata['xaxis.range[0]'] !== undefined && !isSyncingZoom.value) {
+        isSyncingZoom.value = true;
+        const xRange = [eventdata['xaxis.range[0]'], eventdata['xaxis.range[1]']];
+        const yRange = [eventdata['yaxis.range[0]'], eventdata['yaxis.range[1]']];
+        selectVisibleCellTypes(xRange, yRange);
+        Plotly.relayout('umap-plot', {
+          'xaxis.range[0]': eventdata['xaxis.range[0]'],
+          'xaxis.range[1]': eventdata['xaxis.range[1]'],
+          'yaxis.range[0]': eventdata['yaxis.range[0]'],
+          'yaxis.range[1]': eventdata['yaxis.range[1]']
+        });
+        setTimeout(() => { isSyncingZoom.value = false; }, 100);
+      }
+    });
+
+    document.getElementById('umap-chart-gene').on('plotly_doubleclick', function() {
+      visibleLabels.value = [...global_clusterLabels.value];
+      Plotly.relayout('umap-plot', { 'xaxis.autorange': true, 'yaxis.autorange': true });
+    });
+  } catch (error) {
+    console.warn('GWAS/scDRS 评分暂无数据:', error.message);
+    gwasScoreSummary.value = null;
+    gwasPlottedCells.value = 0;
+    ElMessage.warning(t('scd23_no_score_data'));
+  } finally {
+    umapGeneLoading.value = false;
+  }
+};
+
+const { t } = useI18n();
+
 // 更新 UMAP 图2 的点大小
 const updateUmap2 = () => {
-  if (isSearchgene.value === true) {
+  if (isSearchgene.value !== true) return;
+  if (overlayResultMode.value === 'gwas') {
+    updateGenePlot();
+  } else {
     Plotly.restyle('umap-chart-gene', 'marker.size', [markerSize2.value]);
   }
 };
@@ -1468,6 +1791,21 @@ const log2fc = ref(0);
 const pageSize = ref(10);
 //const pvalue = ref(5);
 const selectedDirection = ref('all');
+
+const toNumber = (value, fallback = 0) => {
+  const num = Number(value);
+  return Number.isFinite(num) ? num : fallback;
+};
+
+const normalizeDEGRow = (item = {}) => ({
+  ...item,
+  i: item.i ?? item.gene_id ?? item.gene ?? item.feature_name ?? '',
+  fc: toNumber(item.fc ?? item.f ?? item.log2fc),
+  f: toNumber(item.f ?? item.fc ?? item.log2fc),
+  a: toNumber(item.a ?? item.padj ?? item.adjusted_pvalue ?? item.pvalue, 1),
+  t1: toNumber(item.t1 ?? item.pct1 ?? item.pct_1),
+  t2: toNumber(item.t2 ?? item.pct2 ?? item.pct_2),
+});
 
 const DEGdata = ref([]);
 const currentPage = ref(1);
@@ -1489,10 +1827,7 @@ const pValueMarks = {
   7: '0.5',
 }
 
-const formattedPValue = computed(() => {
-  const val = logPValues[pValueSliderIndex.value]
-  return val < 0.001 ? `10^${Math.log10(val).toFixed(0)}` : val.toFixed(3)
-})
+const formattedPValue = computed(() => logPValues[pValueSliderIndex.value])
 
 const loadingDEG = ref(true);
 //----------------------------------
@@ -1516,12 +1851,19 @@ onMounted(() => {
   fetch(config.apiUrl + `general_DEG_CellType.php?${params}`)
     .then((response) => response.json())
     .then((data) => {
-      cellTypes.value = data;
-      cellType.value = cellTypes.value[0];
-      loadingDEG.value = false;
+      cellTypes.value = Array.isArray(data) ? data.filter(Boolean) : [];
+      cellType.value = cellTypes.value[0] || '';
+      if (!cellType.value) {
+        DEGdata.value = [];
+        loadingDEG.value = false;
+      }
     })
     .catch((error) => {
-      console.error("Failed to load DEGs:", error);
+      console.error("Failed to load DEG cell types:", error);
+      cellTypes.value = [];
+      cellType.value = '';
+      DEGdata.value = [];
+      loadingDEG.value = false;
     });
 });
 
@@ -1529,25 +1871,37 @@ onMounted(() => {
 //检测用户更换细胞类型
 //------------------------------------------------------//
 watch(cellType, async (newcellType) => {
+  syncStudySingleCellAgentContext({ selectedCellType: newcellType || '', activeTab: 'DEG' });
+  const clusterRaw = String(newcellType || '').trim();
+  if (!clusterRaw) {
+    DEGdata.value = [];
+    loadingDEG.value = false;
+    return;
+  }
   loadingDEG.value = true;
   //获取差异数据
   const params = new URLSearchParams({
     id: route.params.study,
-    cluster: newcellType
+    cluster: clusterRaw
   });
   fetch(config.apiUrl + `general_getDEG_ByCluster.php?${params}`)
-    .then((response) => response.arrayBuffer())
-    .then((arrayBuffer) => {
-      //console.log(data);
-      const compressed = new Uint8Array(arrayBuffer);
-      const decompressed = pako.ungzip(compressed); // 使用 pako 解压
-      const jsonString = new TextDecoder('utf-8').decode(decompressed);
-      DEGdata.value = JSON.parse(jsonString);
+    .then(async (response) => {
+      const arrayBuffer = await response.arrayBuffer();
+      const parsed = parseMaybeGzipJson(arrayBuffer);
+      if (!response.ok) {
+        throw new Error(parsed?.error || `HTTP ${response.status}`);
+      }
+      return parsed;
+    })
+    .then((data) => {
+      DEGdata.value = Array.isArray(data) ? data.map(normalizeDEGRow) : [];
       currentPage.value = 1;//回到第一页
       loadingDEG.value = false;
     })
     .catch((error) => {
       console.error("Failed to load DEGs:", error);
+      DEGdata.value = [];
+      loadingDEG.value = false;
     });
 });
 
@@ -1559,11 +1913,11 @@ watch(cellType, async (newcellType) => {
 const filteredData = computed(() => {
   return DEGdata.value.filter(item => {
     currentPage.value = 1;
-    const logFoldChange = parseFloat(item.fc);
-    const adjustedPvalue = parseFloat(item.a);
+    const logFoldChange = toNumber(item.fc);
+    const adjustedPvalue = toNumber(item.a, 1);
     // 将 filterDEGGenes.value 和 item.i 都转换为小写，然后检查是否包含
-    const lowerCaseFilter = filterDEGGenes.value.toLowerCase();
-    const lowerCaseItemI = item.i.toLowerCase();
+    const lowerCaseFilter = (filterDEGGenes.value || '').toLowerCase();
+    const lowerCaseItemI = String(item.i || '').toLowerCase();
 
     let directionFilter = true;
     if (selectedDirection.value === 'up' && logFoldChange < 0) {
@@ -1658,10 +2012,10 @@ const sortedData = computed(() => {
     let res = 0
     if (prop === 'i') {
       // 字符串排序
-      res = a.i.localeCompare(b.i)
+      res = String(a.i || '').localeCompare(String(b.i || ''))
     } else {
       // 数字排序
-      res = a[prop] - b[prop]
+      res = toNumber(a[prop]) - toNumber(b[prop])
     }
     return sortOrder.value === 'ascending' ? res : -res
   })
@@ -2297,8 +2651,8 @@ const resizeMyChart = () => {
 
 };
 
-import { onUnmounted } from 'vue';
 onUnmounted(() => {
+  clearAgentContext();
   window.removeEventListener('resize', resizeMyChart);
   genes.value = [];
   umapData.value = [];
@@ -2318,5 +2672,238 @@ onUnmounted(() => {
 /* ----------------------------------------------------------- */
 .scroller-wrapper {
   height: 400px;
+}
+
+.data-missing-alert {
+  margin: 0 0 14px;
+}
+
+.data-missing-alert strong {
+  margin-left: 6px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.plot-comparison-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: 24px;
+  row-gap: 14px;
+  align-items: stretch;
+}
+
+.plot-comparison-grid .information-left,
+.plot-comparison-grid .information-right {
+  width: auto;
+  min-width: 0;
+  margin: 0;
+}
+
+.plot-panel {
+  display: grid;
+  grid-row: span 2;
+  grid-template-rows: auto auto;
+  grid-template-rows: subgrid;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid var(--ss-border-soft, #e5eaf2);
+  border-radius: 12px;
+  background: linear-gradient(180deg, #fff 0%, #f8fafd 100%);
+}
+
+.plot-panel-header {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.plot-panel-header h1 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #0f172a;
+}
+
+.plot-toolbar {
+  display: flex;
+  align-items: center;
+  width: auto;
+  height: auto;
+  min-height: 40px;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--ss-border-soft, #e5eaf2);
+  border-radius: 10px;
+  background: var(--ss-bg, #f8fafc);
+}
+
+.plot-toolbar .search-gene-input {
+  flex: 1 1 220px;
+  max-width: none;
+}
+
+.plot-square-card {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border: 1px solid var(--ss-border-soft, #e5eaf2);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.plot-square {
+  width: 100%;
+  height: 100%;
+}
+
+.plot-loading {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 80%;
+  height: 80%;
+  object-fit: contain;
+  z-index: 1;
+}
+
+@media (max-width: 900px), (orientation: portrait) {
+  .plot-comparison-grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto;
+  }
+
+  .plot-panel {
+    grid-row: auto;
+    grid-template-rows: auto auto;
+  }
+}
+
+.overlay-mode-tabs {
+  display: inline-flex;
+  align-self: flex-start;
+  gap: 2px;
+  padding: 4px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+.overlay-tab {
+  padding: 6px 18px;
+  border-radius: 7px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: #64748b;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition: color .2s ease, background-color .2s ease, box-shadow .2s ease;
+}
+
+.overlay-tab:hover:not(.active) {
+  color: #334155;
+  background: rgba(255, 255, 255, .65);
+}
+
+.overlay-tab.active {
+  color: #1d4ed8;
+  font-weight: 600;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .08), 0 1px 3px rgba(15, 23, 42, .1);
+}
+
+.overlay-controls {
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--ss-border-soft);
+  border-radius: 10px;
+  background: var(--ss-bg);
+}
+
+.overlay-field,
+.overlay-gene-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.overlay-gene-search {
+  position: relative;
+  flex: 1 1 260px;
+}
+
+.overlay-label {
+  font-size: 12px;
+  color: var(--ss-text-2);
+  white-space: nowrap;
+}
+
+.overlay-mode-select {
+  width: 210px;
+}
+
+.gwas-sex-select {
+  width: 110px;
+}
+
+.overlay-scroller {
+  left: 0;
+  right: 0;
+}
+
+.covered-datasets-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.covered-datasets-head h1 {
+  margin-bottom: 0;
+}
+
+.covered-datasets-head span {
+  color: var(--ss-text-3, #7b8494);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.covered-datasets-box {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 96px;
+  overflow-y: auto;
+  padding: 8px;
+  margin-top: 8px;
+  border: 1px solid var(--ss-border-soft, #e5eaf2);
+  border-radius: 8px;
+  background: rgba(248, 250, 253, 0.72);
+}
+
+.covered-datasets-box .dataset-link {
+  border: 1px solid var(--ss-border, #d7deea);
+  border-radius: 999px;
+  background: #fff;
+  padding: 4px 9px;
+  color: var(--el-color-primary);
+  font-size: 0.82rem;
+  line-height: 1.35;
+  cursor: pointer;
+}
+
+.covered-datasets-box .dataset-link:hover {
+  border-color: var(--el-color-primary);
+  background: rgba(64, 158, 255, 0.08);
 }
 </style>

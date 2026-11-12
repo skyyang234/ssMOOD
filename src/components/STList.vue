@@ -11,73 +11,50 @@
                         <ssmoodStudy2 />
                         <ssmoodStudy4 />
                     </div>
-                    <h3>{{ $t('bst2-2') }}</h3>
-                    <!-- 筛选逻辑 -->
-                    <el-card class="filter-box" shadow="never">
-                        <el-row :gutter="20" align="middle" class="filter-row">
-                            <!-- 物种 -->
-                            <el-col :span="1" class="filter-label">
-                                {{ $t('bsc3') }}
-                            </el-col>
-                            <el-col :span="3">
-                                <el-select v-model="filters.species" size="default" class="filter-select"
-                                    placeholder="Select Species">
-                                    <el-option label="All" value="all" />
-                                    <el-option label="Mouse" value="mouse" />
-                                    <el-option label="Human" value="human" />
-                                </el-select>
-                            </el-col>
-
-                            <!-- 区域 -->
-                            <el-col :span="1" class="filter-label">
-                                {{ $t('bsc4') }}
-                            </el-col>
-                            <el-col :span="3">
-                                <el-select v-model="filters.area" size="default" class="filter-select"
-                                    placeholder="Select Area">
-                                    <el-option label="All" value="all" />
-                                    <!-- Mouse / All 可见 -->
-                                    <el-option v-if="filters.species === 'mouse' || filters.species === 'all'" label="I"
-                                        value="I" />
-                                    <el-option v-if="filters.species === 'mouse' || filters.species === 'all'"
-                                        label="II" value="II" />
-                                    <el-option v-if="filters.species === 'mouse' || filters.species === 'all'"
-                                        label="III" value="III" />
-                                    <el-option v-if="filters.species === 'mouse' || filters.species === 'all'"
-                                        label="IV" value="IV" />
-                                    <el-option v-if="filters.species === 'mouse' || filters.species === 'all'" label="V"
-                                        value="V" />
-                                    <!-- Human / All 可见 -->
-                                    <el-option v-if="filters.species === 'human' || filters.species === 'all'"
-                                        label="BA12" value="BA12" />
-                                    <el-option v-if="filters.species === 'human' || filters.species === 'all'"
-                                        label="BA46" value="BA46" />
-                                </el-select>
-                            </el-col>
-
-                            <!-- 性别 -->
-                            <el-col :span="1" class="filter-label">
-                                {{ $t('bsc5') }}
-                            </el-col>
-                            <el-col :span="3">
-                                <el-select v-model="filters.sex" size="default" class="filter-select"
-                                    placeholder="Select Sex">
-                                    <el-option label="All" value="all" />
-                                    <el-option label="Male" value="male" />
-                                    <el-option label="Female" value="female" />
-                                </el-select>
-                            </el-col>
-                        </el-row>
-                    </el-card>
+                    <div class="sec-hd" style="margin-top: 32px;">
+                        <div>
+                            <h3 class="sec-hd-title">{{ $t('bst2-2') }}</h3>
+                            <div class="sec-hd-sub">{{ filteredDatasets.length }} of {{ datasets.length }} datasets</div>
+                        </div>
+                        <button class="btn-reset" @click="resetFilters">Reset filters</button>
+                    </div>
+                    <div class="filter-bar">
+                        <div class="filter-group">
+                            <span class="filter-label">{{ $t('bsc3') }}</span>
+                            <div class="chip-row">
+                                <button v-for="opt in speciesOpts" :key="opt.v" class="chip" :class="{ active: filters.species === opt.v }" @click="filters.species = opt.v">
+                                    <span v-if="opt.dot" class="chip-dot" :style="{ background: opt.dot }"></span>
+                                    {{ opt.label }}
+                                </button>
+                            </div>
+                        </div>
+                        <div class="filter-group">
+                            <span class="filter-label">{{ $t('bsc4') }}</span>
+                            <div class="chip-row">
+                                <button class="chip" :class="{ active: filters.area === 'all' }" @click="filters.area = 'all'">All</button>
+                                <button v-for="area in areaOpts" :key="area" class="chip" :class="{ active: filters.area === area }" @click="filters.area = area">
+                                    {{ area }}
+                                </button>
+                            </div>
+                        </div>
+                        <div class="filter-group">
+                            <span class="filter-label">{{ $t('bsc5') }}</span>
+                            <div class="chip-row">
+                                <button v-for="opt in sexOpts" :key="opt.v" class="chip" :class="{ active: filters.sex === opt.v }" @click="filters.sex = opt.v">
+                                    {{ opt.label }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
 
                     <!-- 数据集列表 -->
 
                     <el-table :data="filteredDatasets" stripe style="width: 100%;">
                         <!-- 数据集编号（可点击跳转） -->
-                        <el-table-column prop="dataset_id" :label="$t('bsc6.1')" width="180">
+                        <el-table-column prop="display_name" :label="$t('bsc6.1')" width="180">
                             <template #default="{ row }">
                                 <span class="clickable" @click="goToDatasetDetails(row.dataset_id)">
-                                    {{ row.dataset_id }}
+                                    {{ row.display_name || row.dataset_id }}
                                 </span>
                             </template>
                         </el-table-column>
@@ -97,21 +74,78 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, onMounted, computed, onUnmounted, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import ssmoodStudy2 from './study/ssmoodStudy2.vue';
 import ssmoodStudy4 from './study/ssmoodStudy4.vue';
 //----------以下为一个ssmood页面需要的最基础的东西--------------
 import BackToTop from './general/BackToTop.vue';
 import NavigationBar from './general/NavigationBar.vue';
 import config from '@/config';
+import { updateAgentContext, clearAgentContext } from '@/utils/agentContext';
 //----------以上为一个ssmood页面需要的最基础的东西--------------
 
+const route = useRoute();
+
+// ── URL 筛选参数 ──
+// AI 指引气泡会生成带参数的链接，落地时必须把对应筛选勾上，例如：
+//   /browse/SpatialTranscriptome?species=mouse&sex=female&area=I
+// 只认白名单里的值，非法/缺失一律退回 all，避免拼错的参数导致列表空白。
+const SPECIES_VALUES = ['mouse', 'human'];
+const SEX_VALUES = ['male', 'female'];
+// 脑区取值与物种绑定：小鼠只有皮层分层 I-V，人只有 BA12/BA46
+const AREA_BY_SPECIES = {
+    mouse: ['I', 'II', 'III', 'IV', 'V'],
+    human: ['BA12', 'BA46'],
+};
+const AREA_VALUES = [...AREA_BY_SPECIES.mouse, ...AREA_BY_SPECIES.human];
+
+function readFiltersFromQuery(query = {}) {
+    // URL 里大小写不一定规范（Female / ba12 / Mouse），先归一化再和选项比对。
+    // 脑区同时接受 area（前端约定）与 brainRegion（后端 build_navigation_action 的输出）。
+    const read = (key, allowed) => {
+        const source = key === 'area' ? (query.area ?? query.brainRegion) : query[key];
+        const raw = String(source || '').trim();
+        if (!raw) return 'all';
+        const normalized = key === 'area' ? raw.toUpperCase() : raw.toLowerCase();
+        const hit = allowed.find(item => item.toLowerCase() === normalized.toLowerCase());
+        return hit || 'all';
+    };
+    const species = read('species', SPECIES_VALUES);
+    // 脑区必须与物种匹配，否则（如 mouse + BA12）会筛出空列表
+    const allowedAreas = AREA_BY_SPECIES[species] || AREA_VALUES;
+    return {
+        species,
+        area: read('area', allowedAreas),
+        sex: read('sex', SEX_VALUES),
+    };
+}
+
 const datasets = ref([]);
-const filters = ref({
-    species: 'all',
-    area: 'all',
-    sex: 'all'
+const filters = ref(readFiltersFromQuery(route.query));
+
+// 已在列表页时，AI 再给一条筛选条件不同的链接只会改 query、不会重建组件，
+// 靠这个 watch 把勾选状态同步过去。
+watch(() => route.query, (query) => {
+    filters.value = readFiltersFromQuery(query);
+}, { deep: true });
+
+const speciesOpts = [
+    { v: 'all', label: 'All', dot: null },
+    { v: 'mouse', label: 'Mouse', dot: '#3a8a72' },
+    { v: 'human', label: 'Human', dot: 'rgb(93,116,162)' },
+];
+
+const sexOpts = [
+    { v: 'all', label: 'All' },
+    { v: 'male', label: 'Male' },
+    { v: 'female', label: 'Female' },
+];
+
+const areaOpts = computed(() => {
+    if (filters.value.species === 'mouse') return ['I', 'II', 'III', 'IV', 'V'];
+    if (filters.value.species === 'human') return ['BA12', 'BA46'];
+    return ['I', 'II', 'III', 'IV', 'V', 'BA12', 'BA46'];
 });
 
 const filteredDatasets = computed(() => {
@@ -126,6 +160,10 @@ const filteredDatasets = computed(() => {
 
 const router = useRouter();
 
+function resetFilters() {
+    filters.value = { species: 'all', area: 'all', sex: 'all' };
+}
+
 const fetchDatasets = async () => {
     try {
         const response = await fetch(config.apiUrl + 'bst_getSTDatasetList.php');
@@ -136,7 +174,59 @@ const fetchDatasets = async () => {
     }
 };
 
-onMounted(fetchDatasets);
+// ── 页面自描述（P4）：本页可筛什么、表里有哪些列，由页面自己声明 ──
+function registerPageSchema() {
+    updateAgentContext({
+        capabilities: ['browse_list', 'filter_species', 'filter_brain_region', 'filter_sex'],
+        pageSchema: {
+            filters: [
+                { key: 'species', labels: ['物种', 'Species'], values: ['mouse', 'human'] },
+                { key: 'area', labels: ['脑区', 'Brain region'], values: ['I', 'II', 'III', 'IV', 'V', 'BA12', 'BA46'] },
+                { key: 'sex', labels: ['性别', 'Sex'], values: ['male', 'female'] },
+            ],
+            columns: [
+                { key: 'dataset_id', labels: ['数据集 ID', 'Dataset ID'] },
+                { key: 'species', labels: ['物种', 'Species'] },
+                { key: 'sex', labels: ['性别', 'Sex'] },
+                { key: 'area', labels: ['脑区', 'Brain area'] },
+                { key: 'cells', labels: ['细胞数', 'Cells'] },
+            ],
+            // 列表页没有图表模块（同 SingleCellList：声明了就会变成"本页可切换 X"的错误说法）
+            charts: [],
+        },
+    });
+}
+
+function syncListAgentContext() {
+    updateAgentContext({
+        businessState: {
+            omicsType: 'ST',
+            activeTab: 'spatial_dataset_list',
+            species: filters.value.species === 'all' ? '' : filters.value.species,
+            brainRegion: filters.value.area === 'all' ? '' : filters.value.area,
+            sex: filters.value.sex === 'all' ? '' : filters.value.sex,
+            userPrimaryAction: 'browsing_dataset_list',
+        },
+        pageSummary: {
+            datasetCount: datasets.value.length,
+            filteredDatasetCount: filteredDatasets.value.length,
+            availableRegions: areaOpts.value.join(', '),
+            datasetPreview: filteredDatasets.value.slice(0, 6).map(row => row.dataset_id || row.sample_id || row.id).join(', '),
+        },
+    });
+}
+
+watch([filters, datasets], syncListAgentContext, { deep: true });
+
+onMounted(async () => {
+    registerPageSchema();
+    await fetchDatasets();
+    syncListAgentContext();
+});
+
+onUnmounted(() => {
+    clearAgentContext();
+});
 
 const goToDatasetDetails = (datasetId) => {
     router.push({ name: 'STPage', params: { id: datasetId } });
@@ -150,95 +240,125 @@ const goToDatasetDetails = (datasetId) => {
     background: rgba(255, 255, 255, 0.3);
 }
 
-.filters {
+.filter-bar {
     display: flex;
     flex-wrap: wrap;
-    gap: 15px;
-    margin-bottom: 20px;
-    background-color: #f9f9f9;
-    padding: 15px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    gap: 24px;
+    padding: 16px 0;
+    border-top: 1px solid var(--ss-border-soft);
+    border-bottom: 1px solid var(--ss-border-soft);
+    margin-bottom: 16px;
 }
 
-.filters label {
-    font-weight: bold;
-    margin-right: 10px;
-    color: #333;
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
 }
 
-.filters select {
-    padding: 8px 12px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    background-color: #fff;
-    font-size: 14px;
-    color: #333;
-    transition: border-color 0.3s;
+.filter-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--ss-text-3);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
 }
 
-.filters select:focus {
-    border-color: #4CAF50;
-    outline: none;
+.chip-row {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
 }
 
-.filters select:hover {
-    border-color: #45a049;
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 500;
+    background: white;
+    border: 1px solid var(--ss-border);
+    color: var(--ss-text-2);
+    cursor: pointer;
+    transition: var(--ss-tr-fast);
+    font-family: var(--ss-font);
 }
+
+.chip:hover {
+    background: var(--ss-primary-10);
+    border-color: var(--ss-primary-50);
+}
+
+.chip.active {
+    background: var(--ss-primary);
+    color: white;
+    border-color: var(--ss-primary);
+}
+
+.chip-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.4);
+}
+
+.btn-reset {
+    background: none;
+    border: 1px solid var(--ss-border);
+    color: var(--ss-text-2);
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: var(--ss-r-md);
+    cursor: pointer;
+    transition: var(--ss-tr-fast);
+    font-family: var(--ss-font);
+}
+
+.btn-reset:hover {
+    color: var(--ss-primary);
+    border-color: var(--ss-primary);
+}
+
+
 
 
 table {
     width: 100%;
     border-collapse: collapse;
-    background-color: #f9f9f9;
-    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+    background-color: var(--ss-bg);
+    box-shadow: var(--ss-shadow-sm);
 }
 
 th,
 td {
     padding: 12px;
     text-align: left;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid var(--ss-border);
 }
 
 th {
-    background-color: #f2f2f2;
+    background-color: var(--ss-primary-pale);
     font-weight: bold;
 }
 
 tr:hover {
-    background-color: #f1f1f1;
+    background-color: var(--ss-primary-10);
 }
 
-button {
-    background-color: rgb(093, 116, 162);
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 14px;
-    margin: 4px 2px;
-    cursor: pointer;
-    border-radius: 4px;
-}
 
-button:hover {
-    background-color: rgba(093, 116, 162, 0.8);
-}
 
 
 .clickable {
     cursor: pointer;
     text-decoration: underline;
-    color: rgb(093, 116, 162);
-    /* 你可以根据需要更改颜色 */
+    color: var(--ss-primary);
 }
 
 .clickable:hover {
     text-decoration: none;
-    color: rgba(093, 116, 162, 0.8);
-    /* 悬浮时的颜色 */
+    color: var(--ss-primary-80);
 }
 </style>

@@ -1,69 +1,35 @@
 <?php
-include 'config.php';
+ini_set('memory_limit', '1024M');
+require_once __DIR__ . '/helpers.php';
 
-// 创建数据库连接
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-// 检查连接
-if ($conn->connect_error) {
-    // 将数据库连接错误写入日志文件
-    file_put_contents("../log/redis_error_log.txt", "Connection failed: " . $conn->connect_error . PHP_EOL, FILE_APPEND);
-    exit;
-}
-
-// 获取 GET 参数
+$conn = getDb();
 $datasetId = $_GET['id'] ?? '';
 $gene = $_GET['gene'] ?? '';
 
-// 检查参数是否为空
-if (empty($datasetId) || empty($gene)) {
-    echo json_encode(['error' => 'Missing required parameters']);
+if ($datasetId === '' || $gene === '') {
+    $conn->close();
+    http_response_code(400);
+    jsonOut(['error' => 'Missing required parameters']);
     exit;
 }
 
-// 准备 SQL 查询
-$sql = "SELECT bin_data FROM st_expression WHERE dataset_id = ? AND gene_id = ?";
-
-// 准备语句
-$stmt = $conn->prepare($sql);
-
-// 绑定参数
-$stmt->bind_param("ss", $datasetId, $gene);
-
-// 执行查询
-$stmt->execute();
-
-// 获取结果
-$result = $stmt->get_result();
-
-// 检查是否有结果
-if ($result->num_rows > 0) {
-    // 获取第一行数据
-    $row = $result->fetch_assoc();
-    
-    // 设置适当的 HTTP 头
-    header('Content-Type: application/octet-stream');
-    
-    // 清除缓冲区并关闭输出缓冲
-    ob_clean();
-    flush();
-    
-    // 输出二进制数据
-    echo $row['bin_data'];
-} else {
-    echo 'error';
+$sample = resolveSample($conn, $datasetId, 1);
+if (!$sample) {
+    $conn->close();
+    http_response_code(404);
+    jsonOut(['error' => 'Sample not found']);
+    exit;
 }
 
-// 关闭语句
-$stmt->close();
+$expr = getExpressionVector($conn, $sample, $gene);
+if (!$expr) {
+    $conn->close();
+    gzipJson([]);
+    exit;
+}
 
-// 关闭连接
+$values = decompressFloat32Vector($expr['compressed_vector']);
+$rows = expressionRowsForSample($conn, (int)$sample['sample_id'], $values, true);
+
 $conn->close();
-
-
-//内存统计
-$peakMemory = memory_get_peak_usage();
-// 将峰值内存使用情况写入日志文件
-$logEntry = date("Y-m-d H:i:s") . "[". __FILE__ ."] - 峰值内存使用量：" . $peakMemory/1024 . " KB\n";
-file_put_contents($logFile, $logEntry, FILE_APPEND);
-?>
+gzipJson($rows);

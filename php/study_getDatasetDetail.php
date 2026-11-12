@@ -1,40 +1,56 @@
 <?php
-include 'config.php';
+require_once __DIR__ . '/helpers.php';
 
-// 创建数据库连接
-$conn = new mysqli($servername, $username, $password, $dbname);
+$conn = getDb();
+$studyId = $_GET['id'] ?? '';
+$resolved = resolveStudySamples($conn, $studyId);
+$study = $resolved['study'];
 
-// 检查连接
-if ($conn->connect_error) {
-    die("连接失败: " . $conn->connect_error);
-}
-$study_id = $_GET['id'] ?? '';
-// SQL 查询
-$sql = "SELECT study_id, species, age, sex, conditions, area, cells, clusters,information,datasets FROM study WHERE study_id = '$study_id'";
-
-// 执行查询
-$result = $conn->query($sql);
-
-// 初始化数组来存储结果
-$datasets = array();
-
-// 检查结果
-if ($result) {
-    // 遍历结果集
-    while ($row = $result->fetch_assoc()) {
-        // 将每行数据添加到数组中
-        $datasets[] = $row;
+$datasets = [];
+if ($study) {
+    $sampleIds = $resolved['sample_ids'];
+    $cells = 0;
+    $clusters = 0;
+    if ($sampleIds) {
+        $ph = placeholders(count($sampleIds));
+        $types = str_repeat('i', count($sampleIds));
+        $stats = fetchOne($conn, "SELECT SUM(n_cells) AS cells FROM sample WHERE sample_id IN ($ph)", $types, ...$sampleIds);
+        // 必须 FORCE INDEX (idx_sample_id)：否则 MySQL 可能对 cell 走全表扫描，
+        // 空转整合（cell 行数百万）会跑 60s+ 导致接口超时，前端 response.ok=false 直接抛错，
+        // 详情面板就会全空（这正是"整合页详细信息不显示"的原因）。
+        // 与 sst_getNumberOfCluster.php / sst_getCoordinate.php 保持同一执行计划。
+        $clusterStats = fetchOne($conn, "SELECT COUNT(DISTINCT COALESCE(cluster_label2, cell_type, 'Unknown')) AS clusters FROM cell FORCE INDEX (idx_sample_id) WHERE sample_id IN ($ph)", $types, ...$sampleIds);
+        $cells = (int)($stats['cells'] ?? 0);
+        $clusters = (int)($clusterStats['clusters'] ?? 0);
     }
-    
-    // 释放结果集
-    $result->free();
-    
-    // 将数组转换为 JSON 格式
-    echo json_encode($datasets);
-} else {
-    echo "错误: " . $conn->error;
+
+    $information = normalizeDatasetInformation($study['information'] ?? null, null, '', '');
+    $informationObj = datasetInformationObject($information);
+    $datasets[] = [
+        'study_id' => $study['study_id'],
+        'species' => $study['species'] ?? null,
+        'age' => $study['age'] ?? null,
+        'sex' => $study['sex'] ?? null,
+        'conditions' => $study['conditions'] ?? null,
+        'area' => $study['area'] ?? null,
+        'cells' => $cells,
+        'clusters' => $clusters,
+        'sample_scope' => 'integrated',
+        'sampleScope' => 'integrated',
+        'is_integrated' => true,
+        'isIntegrated' => true,
+        'has_integrated_umap' => (bool)($study['has_integrated_umap'] ?? true),
+        'information' => $information,
+        'information_obj' => $informationObj,
+        'datasets' => $study['datasets'] ?? '',
+        // 前端「涵盖的数据集」按钮用 display_name 展示，此前没透传该字段，只能回退显示 sample_name。
+        'dataset_display_names' => $study['dataset_display_names'] ?? '',
+        'sample_ids' => $sampleIds,
+        'sample_count' => count($sampleIds),
+        'missing' => $resolved['missing']
+    ];
+
 }
 
-// 关闭连接
 $conn->close();
-?>
+jsonOut($datasets);

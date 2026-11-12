@@ -1,59 +1,55 @@
 <?php
-include 'config.php';
+require_once __DIR__ . '/helpers.php';
 
-// 创建连接
-$conn = new mysqli($servername, $username, $password, $dbname);
+$conn = getDb();
 
-// 检查连接
-if ($conn->connect_error) {
-    die("连接失败: " . $conn->connect_error);
-}
+$sampleStats = fetchOne(
+    $conn,
+    'SELECT
+        COUNT(*) AS datasets,
+        SUM(CASE WHEN s.is_spatial = 0 AND s.project_id IN (1, 2) THEN s.n_cells ELSE 0 END) AS sc_cells,
+        SUM(CASE WHEN s.is_spatial = 1 AND s.project_id IN (3, 4) THEN s.n_cells ELSE 0 END) AS st_spots,
+        SUM(CASE WHEN s.is_spatial = 0 AND s.project_id IN (1, 2) AND p.species = "human" THEN s.n_cells ELSE 0 END) AS sc_human,
+        SUM(CASE WHEN s.is_spatial = 0 AND s.project_id IN (1, 2) AND p.species = "mouse" THEN s.n_cells ELSE 0 END) AS sc_mouse,
+        SUM(CASE WHEN s.is_spatial = 1 AND s.project_id IN (3, 4) AND p.species = "human" THEN s.n_cells ELSE 0 END) AS st_human,
+        SUM(CASE WHEN s.is_spatial = 1 AND s.project_id IN (3, 4) AND p.species = "mouse" THEN s.n_cells ELSE 0 END) AS st_mouse,
+        SUM(CASE WHEN s.project_id = 14 THEN s.n_cells ELSE 0 END) AS atac_cells,
+        SUM(CASE WHEN s.is_spatial = 0 AND s.project_id IN (1, 2) THEN 1 ELSE 0 END) AS sc_datasets,
+        SUM(CASE WHEN s.is_spatial = 1 AND s.project_id IN (3, 4) THEN 1 ELSE 0 END) AS st_datasets,
+        SUM(CASE WHEN s.project_id = 14 THEN 1 ELSE 0 END) AS atac_datasets
+     FROM sample s
+     JOIN project p ON s.project_id = p.project_id'
+);
 
-// 初始化结果数组
-$results = [];
+$geneStats = fetchOne($conn, 'SELECT COUNT(DISTINCT feature_name) AS genes FROM feature WHERE feature_type = "gene"');
 
-// 查询单细胞数量
-$sql = "SELECT COUNT(*) as count FROM cells";
-$result = $conn->query($sql);
-if ($result->num_rows > 0) {
-    $row = $result->fetch_assoc();
-    $results['cellNum'] = $row['count'];
-} else {
-    $results['cellNum'] = 0;
-}
+$datasets = (int)($sampleStats['datasets'] ?? 0);
+$scCells = (int)($sampleStats['sc_cells'] ?? 0);
+$stSpots = (int)($sampleStats['st_spots'] ?? 0);
+$genes = (int)($geneStats['genes'] ?? 0);
 
-// 查询类别数量
-$sql = "SELECT COUNT(*) as count FROM datasets";
-$result = $conn->query($sql);
-if ($result->num_rows > 0) {
-    $row = $result->fetch_assoc();
-    $results['clusterNum'] = $row['count'];
-} else {
-    $results['clusterNum'] = 0;
-}
-// 查询唯一基因数量
-$sql = "SELECT COUNT(DISTINCT gene_id) as count FROM genes";
-$result = $conn->query($sql);
-if ($result->num_rows > 0) {
-    $row = $result->fetch_assoc();
-    $results['geneNum'] = $row['count'];
-} else {
-    $results['geneNum'] = 0;
-}
+$results = [
+    'datasets' => $datasets,
+    'cells' => $scCells,
+    'spots' => $stSpots,
+    'genes' => $genes,
+    'scDatasets' => (int)($sampleStats['sc_datasets'] ?? 0),
+    'stDatasets' => (int)($sampleStats['st_datasets'] ?? 0),
+    'atacDatasets' => (int)($sampleStats['atac_datasets'] ?? 0),
+    'atacCells' => (int)($sampleStats['atac_cells'] ?? 0),
+    'scHuman' => (int)($sampleStats['sc_human'] ?? 0),
+    'scMouse' => (int)($sampleStats['sc_mouse'] ?? 0),
+    'stHuman' => (int)($sampleStats['st_human'] ?? 0),
+    'stMouse' => (int)($sampleStats['st_mouse'] ?? 0),
+    'source' => 'database',
+    'generatedAt' => gmdate('c'),
 
+    // Legacy field names retained for older frontend code paths.
+    'cellNum' => $scCells,
+    'clusterNum' => $datasets,
+    'geneNum' => $genes,
+    'spatialNum' => $stSpots,
+];
 
-$sql = "SELECT COUNT(*) as count FROM spatial_cells";
-$result = $conn->query($sql);
-if ($result->num_rows > 0) {
-    $row = $result->fetch_assoc();
-    $results['spatialNum'] = $row['count'];
-} else {
-    $results['spatialNum'] = 0;
-}
-
-// 关闭连接
 $conn->close();
-
-// 返回JSON结果
-echo json_encode($results);
-?>
+jsonOut($results);

@@ -2,13 +2,13 @@
 
 // 开发环境配置
 const devConfig = {
-  apiUrl: 'http://172.16.165.245/php/',
+  apiUrl: '/php/',
   email:"xxxx@xxx.com"
 };
 
 // 生产环境配置
 const prodConfig = {
-  apiUrl: './php/',
+  apiUrl: '/php/',
   email:"xxxx@xxx.com"
 };
 

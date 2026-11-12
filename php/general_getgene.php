@@ -1,52 +1,28 @@
 <?php
-include 'config.php';
-// 创建数据库连接
-$conn = new mysqli($servername, $username, $password, $dbname);
+require_once __DIR__ . '/helpers.php';
 
-// 检查连接
-if ($conn->connect_error) {
-    // 将数据库连接错误写入日志文件
-    file_put_contents("../log/redis_error_log.txt", "Connection failed: " . $conn->connect_error . PHP_EOL, FILE_APPEND);
-    exit;
-}
-
-// 定义batch值
+$conn = getDb();
 $datasetId = $_GET['id'] ?? '';
+$projectId = null;
 
 if (strpos($datasetId, 'study') !== false) {
-    // 解析study部分
-    $study = explode('.', $datasetId)[0];
-    $sql = "SELECT gene_id FROM genes WHERE study_id = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("s", $study);
+    $resolved = resolveStudySamples($conn, $datasetId);
+    if (!empty($resolved['sample_ids'])) {
+        $sample = resolveSample($conn, $resolved['sample_ids'][0], null);
+        $projectId = $sample ? (int)$sample['project_id'] : null;
+    }
 } else {
-    $sql = "SELECT g.gene_id,d.study
-    FROM genes g
-    JOIN datasets d ON g.study_id = d.study
-    WHERE d.dataset_id = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("s", $datasetId);
+    $sample = resolveSample($conn, $datasetId, null);
+    $projectId = $sample ? (int)$sample['project_id'] : null;
 }
 
-$stmt->execute();
-$result = $stmt->get_result();
-// 获取查询结果并存储在数组中
-$genes = array();
-while ($row = $result->fetch_assoc()) {
-    $genes[] = $row['gene_id'];
+$genes = [];
+if ($projectId !== null) {
+    $rows = fetchAll($conn, 'SELECT feature_name FROM feature WHERE project_id = ? AND feature_type = "gene" ORDER BY feature_name', 'i', $projectId);
+    foreach ($rows as $row) {
+        $genes[] = $row['feature_name'];
+    }
 }
 
-// 关闭数据库连接
-$stmt->close();
 $conn->close();
-
-
-$compressed = zlib_encode(json_encode(array('genes' => $genes)), ZLIB_ENCODING_GZIP);
-
-    // 设置适当的 HTTP 头
-header('Content-Type: application/octet-stream');
-    // 清除缓冲区并关闭输出缓冲
-ob_clean();
-flush();
-echo $compressed;
-?>
+gzipJson(['genes' => $genes]);

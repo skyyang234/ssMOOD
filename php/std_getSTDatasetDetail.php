@@ -1,39 +1,69 @@
 <?php
-include 'config.php';
-// 创建数据库连接
-$conn = new mysqli($servername, $username, $password, $dbname);
+require_once __DIR__ . '/helpers.php';
 
-// 检查连接
-if ($conn->connect_error) {
-    die("连接失败: " . $conn->connect_error);
-}
+$conn = getDb();
 $datasetId = $_GET['id'] ?? '';
-// SQL 查询
-$sql = "SELECT dataset_id, species, age, sex, conditions, area, cells, clusters,detail, scorst, information FROM datasets WHERE dataset_id = '$datasetId' AND scorst = 'st'";
+$sample = resolveSample($conn, $datasetId, 1);
 
-// 执行查询
-$result = $conn->query($sql);
+$datasets = [];
+if ($sample) {
+    $row = fetchOne(
+        $conn,
+        'SELECT s.*, p.species, p.technology, p.has_integrated_umap, COUNT(DISTINCT COALESCE(c.cluster_label2, c.cell_type)) AS clusters
+         FROM sample s
+         JOIN project p ON s.project_id = p.project_id
+         LEFT JOIN cell c ON s.sample_id = c.sample_id
+         WHERE s.sample_id = ? AND s.is_spatial = 1
+         GROUP BY s.sample_id',
+        'i',
+        $sample['sample_id']
+    );
 
-// 初始化数组来存储结果
-$datasets = array();
-
-// 检查结果
-if ($result) {
-    // 遍历结果集
-    while ($row = $result->fetch_assoc()) {
-        // 将每行数据添加到数组中
-        $datasets[] = $row;
+    $gsmapSummary = gsmapSummaryForSampleId($conn, (int)$row['sample_id']);
+    $sex_abbr = strtolower($row['sex']) === 'female' ? 'F' : (strtolower($row['sex']) === 'male' ? 'M' : strtoupper(substr($row['sex'] ?? 'U', 0, 1)));
+    $tissue = $row['tissue'] ?? 'NA';
+    $condition = $row['condition'] ?? 'NA';
+    $repPos = fetchOne(
+        $conn,
+        'SELECT COUNT(*) AS pos FROM sample WHERE project_id = ? AND tissue = ? AND sex = ? AND `condition` = ? AND is_spatial = 1 AND sample_id <= ?',
+        'isssi',
+        (int)$row['project_id'], $row['tissue'], $row['sex'], $row['condition'], (int)$row['sample_id']
+    );
+    $display_name = "{$sex_abbr}_{$tissue}_{$condition}_rep" . ((int)($repPos['pos'] ?? 1));
+    if ($row) {
+        $information = normalizeDatasetInformation($row['metadata'], null, 'stereo-seq', $row['technology']);
+        $informationObj = datasetInformationObject($information);
+        $datasets[] = [
+            'dataset_id' => $row['sample_name'],
+            'display_name' => $display_name,
+            'species' => $row['species'],
+            'age' => $row['age'],
+            'sex' => $row['sex'],
+            'conditions' => $row['condition'],
+            'area' => $row['tissue'],
+            'cells' => $row['n_cells'],
+            'clusters' => $row['clusters'],
+            'sample_id' => (int)$row['sample_id'],
+            'sample_scope' => 'single',
+            'is_integrated' => false,
+            'has_integrated_umap' => (bool)$row['has_integrated_umap'],
+            'has_gsmap_spatial' => $gsmapSummary['has_gsmap_spatial'],
+            'has_gsmap_cauchy' => $gsmapSummary['has_gsmap_cauchy'],
+            'gsmap_spatial_rows' => $gsmapSummary['gsmap_spatial_rows'],
+            'gsmap_spatial_traits' => $gsmapSummary['gsmap_spatial_traits'],
+            'gsmap_spatial_spots' => $gsmapSummary['gsmap_spatial_spots'],
+            'gsmap_cauchy_rows' => $gsmapSummary['gsmap_cauchy_rows'],
+            'gsmap_cauchy_traits' => $gsmapSummary['gsmap_cauchy_traits'],
+            'gsmap_cauchy_annotations' => $gsmapSummary['gsmap_cauchy_annotations'],
+            'detail' => $information,
+            'detail_obj' => $informationObj,
+            'scorst' => 'st',
+            'information' => $information,
+            'information_obj' => $informationObj
+        ];
     }
-    
-    // 释放结果集
-    $result->free();
-    
-    // 将数组转换为 JSON 格式
-    echo json_encode($datasets);
-} else {
-    echo "错误: " . $conn->error;
+
 }
 
-// 关闭连接
 $conn->close();
-?>
+jsonOut($datasets);

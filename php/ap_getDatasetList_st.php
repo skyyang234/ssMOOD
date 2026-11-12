@@ -1,44 +1,38 @@
 <?php
-include 'config.php';
-// 创建数据库连接
-$conn = new mysqli($servername, $username, $password, $dbname);
+require_once __DIR__ . '/helpers.php';
 
-// 检查连接
-if ($conn->connect_error) {
-    die("连接失败: " . $conn->connect_error);
+$conn = getDb();
+$rows = fetchAll(
+    $conn,
+    'SELECT s.sample_id, s.sample_name
+     FROM sample s
+     WHERE s.is_spatial = 1 AND s.project_id IN (3, 4)
+     ORDER BY s.project_id, s.sample_id'
+);
+
+$spatialIds = [];
+$spatial = fetchAll($conn, 'SELECT sample_id FROM sample WHERE sample_name = "ST0055_C_BA46" AND is_spatial = 1 LIMIT 1');
+foreach ($spatial as $sr) {
+    $spatialIds[(int)$sr['sample_id']] = true;
 }
-
-// SQL 查询
-$sql = "SELECT dataset_id FROM datasets WHERE scorst = 'st'"; // 假设您的数据表名为 datasets，并且包含 id 和 name 字段
-
-// 执行查询
-$result = $conn->query($sql);
-
-// 初始化数组来存储结果
-$datasets = array();
-
-// 检查结果
-if ($result) {
-    // 遍历结果集
-    $i = 0 ;
-    while ($row = $result->fetch_assoc()) {
-        // 将每行数据添加到数组中，确保键名为 'id' 和 'name'
-        $datasets[] = array(
-            "id" => $i,
-            "name" => $row['dataset_id']
-        );
-        $i++;
-    }
-    
-    // 释放结果集
-    $result->free();
-    
-    // 将数组转换为 JSON 格式，并封装在包含 'datasets' 键的外层数组中
-    echo json_encode(array("datasets" => $datasets));
-} else {
-    echo "错误: " . $conn->error;
+$cauchyIds = [];
+$cauchy = fetchAll($conn, 'SELECT sample_id FROM sample WHERE sample_name IN ("ST0051_C_BA12", "ST0055_C_BA46") AND is_spatial = 1');
+foreach ($cauchy as $cr) {
+    $cauchyIds[(int)$cr['sample_id']] = true;
 }
-
-// 关闭连接
+$datasets = [];
+$i = 0;
+foreach ($rows as $row) {
+    $sid = (int)$row['sample_id'];
+    $datasets[] = [
+        'id' => $i++,
+        'sample_id' => $sid,
+        'name' => $row['sample_name'],
+        'sample_scope' => 'single',
+        'is_integrated' => false,
+        'has_gsmap_spatial' => isset($spatialIds[$sid]),
+        'has_gsmap_cauchy' => isset($cauchyIds[$sid])
+    ];
+}
 $conn->close();
-?>
+jsonOut(['datasets' => $datasets]);

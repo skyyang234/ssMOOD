@@ -1,49 +1,25 @@
 <?php
-include 'config.php';
-// 创建数据库连接
-$conn = new mysqli($host, $username, $password, $dbname);
-// 指定的 dataset_id
+require_once __DIR__ . '/helpers.php';
+
+$conn = getDb();
 $datasetId = $_GET['id'] ?? '';
-
-// 创建数据库连接
-$conn = new mysqli($host, $username, $password, $dbname);
-
-// 检查连接是否成功
-if ($conn->connect_error) {
-    die('Database connection failed: ' . $conn->connect_error);
-}
-
-// 查询各个细胞分类的数量
-$query = "
-    SELECT cluster_label2, COUNT(*) as cell_count
-    FROM cells
-    WHERE dataset_id = ?
-    GROUP BY cluster_label2
-";
-
-// 准备 SQL 语句
-$stmt = $conn->prepare($query);
-
-// 绑定参数
-$stmt->bind_param('s', $datasetId);
-
-// 执行查询
-$stmt->execute();
-
-// 获取结果
-$result = $stmt->get_result();
-
-// 初始化结果数组
+$sample = resolveSample($conn, $datasetId, 0);
 $resultArray = [];
 
-// 获取查询结果
-while ($row = $result->fetch_assoc()) {
-    $resultArray[$row['cluster_label2']] = (int) $row['cell_count'];
+if ($sample) {
+    $rows = fetchAll(
+        $conn,
+        'SELECT COALESCE(cluster_label2, cell_type, "Unknown") AS cluster_label2, COUNT(*) AS cell_count
+         FROM cell
+         WHERE sample_id = ? AND is_spatial = 0
+         GROUP BY COALESCE(cluster_label2, cell_type, "Unknown")',
+        'i',
+        $sample['sample_id']
+    );
+    foreach ($rows as $row) {
+        $resultArray[$row['cluster_label2']] = (int)$row['cell_count'];
+    }
 }
 
-// 关闭数据库连接
-$stmt->close();
 $conn->close();
-
-echo json_encode($resultArray);
-?>
+jsonOut($resultArray);

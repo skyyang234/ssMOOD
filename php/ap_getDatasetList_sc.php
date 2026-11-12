@@ -1,44 +1,12 @@
 <?php
-include 'config.php';
-// 创建数据库连接
-$conn = new mysqli($servername, $username, $password, $dbname);
+require_once __DIR__ . '/helpers.php';
 
-// 检查连接
-if ($conn->connect_error) {
-    die("连接失败: " . $conn->connect_error);
+$conn = getDb();
+$rows = fetchAll($conn, 'SELECT sample_id, sample_name FROM sample WHERE is_spatial = 0 AND project_id IN (1, 2) ORDER BY project_id, sample_id');
+$datasets = [];
+$i = 0;
+foreach ($rows as $row) {
+    $datasets[] = ['id' => $i++, 'sample_id' => (int)$row['sample_id'], 'name' => $row['sample_name'], 'sample_scope' => 'single', 'is_integrated' => false];
 }
-
-// SQL 查询
-$sql = "SELECT dataset_id FROM datasets WHERE scorst = 'sc'"; // 假设您的数据表名为 datasets，并且包含 id 和 name 字段
-
-// 执行查询
-$result = $conn->query($sql);
-
-// 初始化数组来存储结果
-$datasets = array();
-
-// 检查结果
-if ($result) {
-    // 遍历结果集
-    $i = 0 ;
-    while ($row = $result->fetch_assoc()) {
-        // 将每行数据添加到数组中，确保键名为 'id' 和 'name'
-        $datasets[] = array(
-            "id" => $i,
-            "name" => $row['dataset_id']
-        );
-        $i++;
-    }
-    
-    // 释放结果集
-    $result->free();
-    
-    // 将数组转换为 JSON 格式，并封装在包含 'datasets' 键的外层数组中
-    echo json_encode(array("datasets" => $datasets));
-} else {
-    echo "错误: " . $conn->error;
-}
-
-// 关闭连接
 $conn->close();
-?>
+jsonOut(['datasets' => $datasets]);

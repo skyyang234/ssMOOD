@@ -44,7 +44,7 @@
                     <li>
                         </li>
                 </ul>
-                    <LanguageSwitcher @languageChanged="onLanguageChanged" />
+                    <LanguageSwitcher />
             </nav>
         </header>
         <main>
@@ -176,15 +176,9 @@ async mounted() {
     this.initCharts();
     
   },
-  
-    created() {
-        this.$i18n.locale = this.$root.$selectedLanguage || 'zh1';
-      },
   methods: {
      
-    onLanguageChanged(language) {
-      this.$i18n.locale = language;
-    },
+
 
     async loadData() {
       try {

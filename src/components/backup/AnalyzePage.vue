@@ -31,7 +31,7 @@
             <router-link to="/about">{{ $t('about') }}</router-link>
           </li>
         </ul>
-        <LanguageSwitcher @languageChanged="onLanguageChanged" ></LanguageSwitcher>
+        <LanguageSwitcher ></LanguageSwitcher>
       </nav>
     </header>
 
@@ -123,7 +123,6 @@ import LanguageSwitcher from './general/LanguageSwitcher.vue';
 import { VueFlow, Panel, useVueFlow ,PanelPosition} from '@vue-flow/core';
 //import { MiniMap } from '@vue-flow/minimap';
 import { Controls } from '@vue-flow/controls';
-import { useI18n } from 'vue-i18n';
 import { v4 as uuidv4 } from 'uuid';
 import { WebR } from 'webr';
 import StartNode from './node/StartNode.vue';
@@ -294,23 +293,14 @@ function showSaveSuccess() {
     saveSuccess.value = false;
   }, 3000); // 3000毫秒后执行
 }
-//----------
-//语言切换
-//----------
-const { locale } = useI18n();
 
-// 处理语言切换
-const onLanguageChanged = (language) => {
-  locale.value = language; // 更新语言
-  window.localStorage.setItem('selectedLanguage', language); // 可选：存储语言选择
-};
+//----------
 
+//----------
 onMounted(async() => {
-  const selectedLanguage = window.localStorage.getItem('selectedLanguage') || 'zh1';
-  locale.value = selectedLanguage; // 设置语言
+  window.addEventListener('keydown', handleSaveKeyPress);
   await initializeWebR();
   autoLoad();
-  window.addEventListener('keydown', handleSaveKeyPress);
 });
 
 onUnmounted(() => {

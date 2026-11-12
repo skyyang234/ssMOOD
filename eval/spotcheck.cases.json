@@ -1,0 +1,159 @@
+[
+  {
+    "id": "page-01",
+    "page": "/#/browse/SingleCell",
+    "question": "这个页面怎么用？",
+    "must": ["单细胞|single-cell|single cell"],
+    "mustNot": ["按条件筛选", "可切换 UMAP|switch UMAP", "可切换图表|switch chart"],
+    "focus": "只讲本页真实存在的筛选（物种/脑区/性别）；不得把表格列 Conditions 说成筛选项，也不得声称可切换图表"
+  },
+  {
+    "id": "page-02",
+    "page": "/#/browse/SpatialTranscriptome",
+    "question": "这个页面能筛选什么？",
+    "must": ["物种|species"],
+    "mustNot": ["按条件筛选", "按组织筛选|filter by tissue"],
+    "focus": "空间列表只有物种/脑区/性别；说错维度即不通过"
+  },
+  {
+    "id": "page-03",
+    "page": "/#/browse/atac",
+    "question": "这个页面怎么筛选数据？",
+    "must": ["组织|tissue"],
+    "mustNot": ["按脑区筛选|filter by brain region", "按条件筛选"],
+    "focus": "ATAC 列表是物种/组织/性别，没有脑区（注意：组织 ≠ 脑区）"
+  },
+  {
+    "id": "page-04",
+    "page": "/#/browse/gwas",
+    "question": "怎么找某个疾病的 GWAS 性状？",
+    "must": ["类别|category"],
+    "mustNot": ["按物种筛选|filter by species", "按脑区筛选|filter by brain region"],
+    "focus": "GWAS 列表是关键词 + 类别下拉；不得编造物种/脑区筛选"
+  },
+  {
+    "id": "page-05",
+    "page": "/#/browse/SingleCell/F_BA11_C_rep1",
+    "question": "这个数据集怎么看差异基因？",
+    "must": ["DEG|差异表达|differentially expressed"],
+    "mustNot": ["没有差异表达模块|no DEG module"],
+    "focus": "详情页有 DEG 模块；应说明口径是「某细胞类型 vs 其余细胞类型」"
+  },
+
+  {
+    "id": "term-01",
+    "page": "/#/browse/SingleCell/F_BA11_C_rep1",
+    "question": "Pct.1 是什么意思？",
+    "must": ["检出|detected|expressing"],
+    "mustNot": ["占总细胞数", "该细胞类型在样本中的占比"],
+    "focus": "正确口径是「该基因在该细胞类型中被检出的细胞比例」，不是细胞类型占比"
+  },
+  {
+    "id": "term-02",
+    "page": "/#/browse/SingleCell/F_BA11_C_rep1",
+    "question": "logFC 的正负代表什么？",
+    "must": ["第一组|group 1|group1"],
+    "mustNot": ["与表达量无关"],
+    "focus": "大于 0 表示第一组（所选细胞类型）更高，小于 0 更低"
+  },
+  {
+    "id": "term-03",
+    "page": "/#/browse/SingleCell/F_BA11_C_rep1",
+    "question": "adjusted p 值和原始 p 值有什么区别？",
+    "must": ["多重|multiple"],
+    "mustNot": ["没有区别|no difference"],
+    "focus": "校正用于多重检验；站内显著性阈值 0.05"
+  },
+  {
+    "id": "term-04",
+    "page": "/#/browse/SingleCell/F_BA11_C_rep1",
+    "question": "UMAP 图上每个点是什么？",
+    "must": ["细胞|cell"],
+    "mustNot": ["每个点是一个基因|each point is a gene"],
+    "focus": "每点一个细胞，颜色对应聚类/细胞类型"
+  },
+
+  {
+    "id": "concept-01",
+    "page": "/#/ai",
+    "question": "单细胞和空转有什么区别？",
+    "must": ["空间|spatial"],
+    "mustNot": ["没判断出", "无法生成可靠回答"],
+    "focus": "必须给出「分辨率 vs 位置」的区别，并说明各自能回答什么问题"
+  },
+  {
+    "id": "concept-02",
+    "page": "/#/ai",
+    "question": "阿尔兹海默症是什么？",
+    "must": ["神经退行|neurodegenerative"],
+    "mustNot": ["574", "MDD 对比|MDD vs"],
+    "focus": "纯知识问题直接答；不得拿站内 MDD 统计开场"
+  },
+  {
+    "id": "concept-03",
+    "page": "/#/ai",
+    "question": "CSDS 模型里的 Sus 和 Res 是什么？",
+    "must": ["Sus"],
+    "mustNot": ["对照组与疾病组|control vs disease"],
+    "focus": "小鼠慢性社会挫败应激模型：Sus 易感 / Res 抗逆，不是普通病例对照"
+  },
+
+  {
+    "id": "nav-01",
+    "page": "/#/",
+    "question": "查看母老鼠的单细胞数据",
+    "must": [],
+    "mustNot": ["没判断出"],
+    "focus": "应给出单细胞列表入口，且带 species=mouse、sex=female；有可点卡片"
+  },
+  {
+    "id": "nav-02",
+    "page": "/#/",
+    "question": "BA11 有哪些单细胞样本？",
+    "must": ["BA11"],
+    "mustNot": ["没判断出"],
+    "focus": "应给出人类 BA11 入口或样本卡；不得答成小鼠分层"
+  },
+
+  {
+    "id": "data-01",
+    "page": "/#/browse/SingleCell/F_BA11_C_rep1",
+    "question": "MALAT1 在这个样本里表达多少？",
+    "must": ["MALAT1"],
+    "mustNot": ["574"],
+    "focus": "应给出该样本的检出/表达信息，或明确说该基因在此样本未检出"
+  },
+  {
+    "id": "data-02",
+    "page": "/#/browse/SingleCell/F_BA11_C_rep1",
+    "question": "这个样本的细胞类型组成是怎样的？",
+    "must": ["细胞类型|cell type", "Astro|Oligo|L2-3"],
+    "mustNot": ["无法获取|cannot", "没有细胞类型注释", "无法描述", "no cell type annotation", "未提供细胞类型", "尚未注释", "目前未知", "尚未提供"],
+    "focus": "必须给出真实细胞类型与占比；该样本有注释，声称「没有注释」即为假声明（脚本会命中 mustNot）"
+  },
+
+  {
+    "id": "edge-01",
+    "page": "/#/ai",
+    "question": "有没有阿尔兹海默症的单细胞数据？",
+    "must": [],
+    "mustNot": ["574", "按疾病筛选", "filter by disease", "疾病或表型筛选"],
+    "focus": "第一句就回答有没有；若没有，直接说没有，再给最接近的入口（如 AD 的 GWAS）；不得用 MDD 数字凑，也不得让用户去 SingleCell 按疾病筛选（该页没有疾病筛选）"
+  },
+  {
+    "id": "edge-02",
+    "page": "/#/ai",
+    "question": "帮我写一首关于春天的诗",
+    "must": [],
+    "mustNot": ["数据集", "样本"],
+    "focus": "越界请求应礼貌拒绝并说明能做什么，不得硬扯数据"
+  },
+  {
+    "id": "edge-03",
+    "page": "/#/browse/SingleCell",
+    "question": "这个页面能直接画 UMAP 吗？",
+    "must": ["不能|无法|No.|not on this page|详情页|dataset page|does not|doesn't|not available|only after"],
+    "mustNot": ["可以画|能画|yes, you can"],
+    "focus": "列表页没有图表模块；应说明去详情页或让数据助手画，而不是说本页可画"
+  }
+]

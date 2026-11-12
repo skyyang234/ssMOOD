@@ -1,0 +1,597 @@
+[
+  {
+    "id": "nav-001",
+    "category": "navigation",
+    "input": "查看公老鼠的单细胞数据",
+    "expect": {
+      "routePath": "/browse/SingleCell",
+      "query": { "species": "mouse", "sex": "male" },
+      "labelContains": "雄性"
+    }
+  },
+  {
+    "id": "nav-002",
+    "category": "navigation",
+    "input": "我想查看母老鼠的空转数据",
+    "note": "两层期望不同：纯函数层（expect）必须听懂 female；端到端（expectUi）会核对库里是否有该性别——空转 58 个样本全是 male，因此放宽性别并说明，不给会打开空列表的链接。",
+    "expect": {
+      "routePath": "/browse/SpatialTranscriptome",
+      "query": { "species": "mouse", "sex": "female" },
+      "labelContains": "雌性"
+    },
+    "expectUi": {
+      "routePath": "/browse/SpatialTranscriptome",
+      "query": { "species": "mouse" },
+      "notQuery": ["sex"]
+    }
+  },
+  {
+    "id": "nav-003",
+    "category": "navigation",
+    "input": "怎么查看人的单细胞数据",
+    "expect": {
+      "routePath": "/browse/SingleCell",
+      "query": { "species": "human" },
+      "notQuery": ["sex"]
+    }
+  },
+  {
+    "id": "nav-004",
+    "category": "navigation",
+    "input": "我想查看人的单细胞数据",
+    "expect": {
+      "routePath": "/browse/SingleCell",
+      "query": { "species": "human" }
+    }
+  },
+  {
+    "id": "nav-005",
+    "category": "navigation",
+    "input": "人的单细胞数据怎么看",
+    "expect": {
+      "routePath": "/browse/SingleCell",
+      "query": { "species": "human" }
+    }
+  },
+  {
+    "id": "nav-006",
+    "category": "navigation",
+    "input": "公鼠的空转数据",
+    "expect": {
+      "routePath": "/browse/SpatialTranscriptome",
+      "query": { "species": "mouse", "sex": "male" }
+    }
+  },
+  {
+    "id": "nav-007",
+    "category": "navigation",
+    "input": "母鼠的空转数据",
+    "expect": {
+      "routePath": "/browse/SpatialTranscriptome",
+      "query": { "species": "mouse", "sex": "female" }
+    }
+  },
+  {
+    "id": "nav-008",
+    "category": "navigation",
+    "input": "雄鼠单细胞有哪些",
+    "expect": {
+      "routePath": "/browse/SingleCell",
+      "query": { "species": "mouse", "sex": "male" }
+    }
+  },
+  {
+    "id": "nav-009",
+    "category": "navigation",
+    "input": "雌鼠单细胞有哪些",
+    "expect": {
+      "routePath": "/browse/SingleCell",
+      "query": { "species": "mouse", "sex": "female" }
+    }
+  },
+  {
+    "id": "nav-010",
+    "category": "navigation",
+    "input": "男性病人的单细胞怎么查看",
+    "expect": {
+      "routePath": "/browse/SingleCell",
+      "query": { "species": "human", "sex": "male" }
+    }
+  },
+  {
+    "id": "nav-011",
+    "category": "navigation",
+    "input": "公老鼠和母老鼠的单细胞数据",
+    "expect": {
+      "routePath": "/browse/SingleCell",
+      "query": { "species": "mouse" },
+      "notQuery": ["sex"]
+    }
+  },
+  {
+    "id": "nav-012",
+    "category": "navigation",
+    "input": "人类空转",
+    "expect": {
+      "routePath": "/browse/SpatialTranscriptome",
+      "query": { "species": "human" }
+    }
+  },
+  {
+    "id": "nav-013",
+    "category": "navigation",
+    "input": "小鼠单细胞数据",
+    "expect": {
+      "routePath": "/browse/SingleCell",
+      "query": { "species": "mouse" }
+    }
+  },
+  {
+    "id": "nav-014",
+    "category": "navigation",
+    "input": "病人样本的单细胞怎么筛选",
+    "expect": {
+      "routePath": "/browse/SingleCell",
+      "query": { "species": "human" }
+    }
+  },
+  {
+    "id": "nav-015",
+    "category": "navigation",
+    "input": "小鼠的空转数据有哪些",
+    "expect": {
+      "routePath": "/browse/SpatialTranscriptome",
+      "query": { "species": "mouse" }
+    }
+  },
+  {
+    "id": "nav-016",
+    "category": "navigation",
+    "input": "female mouse spatial data",
+    "expect": {
+      "routePath": "/browse/SpatialTranscriptome",
+      "query": { "species": "mouse", "sex": "female" }
+    }
+  },
+  {
+    "id": "nav-017",
+    "category": "navigation",
+    "input": "male mouse single cell data",
+    "expect": {
+      "routePath": "/browse/SingleCell",
+      "query": { "species": "mouse", "sex": "male" }
+    }
+  },
+  {
+    "id": "nav-018",
+    "category": "navigation",
+    "input": "人的空间转录组怎么筛选",
+    "expect": {
+      "routePath": "/browse/SpatialTranscriptome",
+      "query": { "species": "human" }
+    }
+  },
+  {
+    "id": "nav-019",
+    "category": "navigation",
+    "input": "查看母老鼠的单细胞数据",
+    "expect": {
+      "routePath": "/browse/SingleCell",
+      "query": { "species": "mouse", "sex": "female" }
+    }
+  },
+  {
+    "id": "nav-020",
+    "category": "navigation",
+    "input": "公老鼠单细胞",
+    "expect": {
+      "routePath": "/browse/SingleCell",
+      "query": { "species": "mouse", "sex": "male" }
+    }
+  },
+  {
+    "id": "reg-001",
+    "category": "region",
+    "input": "人类 BA12 的空转数据",
+    "expect": {
+      "routePath": "/browse/SpatialTranscriptome",
+      "query": { "species": "human", "area": "BA12" }
+    }
+  },
+  {
+    "id": "reg-002",
+    "category": "region",
+    "input": "第 III 层的单细胞",
+    "expect": {
+      "routePath": "/browse/SingleCell",
+      "query": { "species": "mouse", "area": "III" }
+    }
+  },
+  {
+    "id": "reg-003",
+    "category": "region",
+    "input": "小鼠第 2 层的单细胞",
+    "expect": {
+      "routePath": "/browse/SingleCell",
+      "query": { "species": "mouse", "area": "II" }
+    }
+  },
+  {
+    "id": "reg-004",
+    "category": "region",
+    "input": "小鼠第 II 层空转的雌性样本",
+    "expect": {
+      "routePath": "/browse/SpatialTranscriptome",
+      "query": { "species": "mouse", "area": "II", "sex": "female" }
+    }
+  },
+  {
+    "id": "reg-005",
+    "category": "region",
+    "input": "人 BA46 的空转",
+    "expect": {
+      "routePath": "/browse/SpatialTranscriptome",
+      "query": { "species": "human", "area": "BA46" }
+    }
+  },
+  {
+    "id": "reg-006",
+    "category": "region",
+    "input": "BA9 单细胞",
+    "expect": {
+      "routePath": "/browse/SingleCell",
+      "query": { "species": "human", "area": "BA9" }
+    }
+  },
+  {
+    "id": "reg-007",
+    "category": "region",
+    "input": "BA11 的单细胞数据",
+    "expect": {
+      "routePath": "/browse/SingleCell",
+      "query": { "species": "human", "area": "BA11" }
+    }
+  },
+  {
+    "id": "atac-001",
+    "category": "atac",
+    "input": "atac 小鼠雄性样本",
+    "expect": {
+      "routePath": "/browse/atac",
+      "query": { "species": "mouse", "sex": "male" },
+      "notQuery": ["area"]
+    }
+  },
+  {
+    "id": "atac-002",
+    "category": "atac",
+    "input": "查看人类 ATAC 数据",
+    "expect": {
+      "routePath": "/browse/atac",
+      "query": { "species": "human" }
+    }
+  },
+  {
+    "id": "atac-003",
+    "category": "atac",
+    "input": "小鼠 ATAC 有哪些样本",
+    "expect": {
+      "routePath": "/browse/atac",
+      "query": { "species": "mouse" }
+    }
+  },
+  {
+    "id": "neg-001",
+    "category": "no_browse",
+    "input": "MALAT1 在公鼠单细胞里表达多少",
+    "expect": { "routePath": null }
+  },
+  {
+    "id": "neg-002",
+    "category": "no_browse",
+    "input": "小鼠单细胞数据的细胞类型组成",
+    "expect": { "routePath": null }
+  },
+  {
+    "id": "neg-003",
+    "category": "no_browse",
+    "input": "这个样本的细胞数量是多少",
+    "expect": { "routePath": null }
+  },
+  {
+    "id": "neg-004",
+    "category": "no_browse",
+    "input": "公鼠和母鼠的差异表达基因",
+    "expect": { "routePath": null }
+  },
+  {
+    "id": "neg-005",
+    "category": "no_browse",
+    "input": "小鼠空转数据的 GWAS 富集结果",
+    "expect": { "routePath": null }
+  },
+  {
+    "id": "neg-006",
+    "category": "no_browse",
+    "input": "人和小鼠的单细胞数据有什么区别",
+    "expect": { "routePath": null }
+  },
+  {
+    "id": "neg-007",
+    "category": "no_browse",
+    "input": "padj 0.03 算显著吗",
+    "expect": { "routePath": null }
+  },
+  {
+    "id": "neg-008",
+    "category": "no_browse",
+    "input": "Pct.1 这一列是什么意思",
+    "expect": { "routePath": null }
+  },
+  {
+    "id": "neg-009",
+    "category": "no_browse",
+    "input": "帮我画一下这个基因的表达",
+    "expect": { "routePath": null }
+  },
+  {
+    "id": "neg-010",
+    "category": "no_browse",
+    "input": "这个数据怎么看",
+    "expect": { "routePath": null }
+  },
+  {
+    "id": "neg-011",
+    "category": "no_browse",
+    "input": "小鼠单细胞里小胶质细胞占比多少",
+    "expect": { "routePath": null }
+  },
+  {
+    "id": "neg-012",
+    "category": "no_browse",
+    "input": "空转",
+    "expect": { "routePath": null }
+  },
+  {
+    "id": "neg-013",
+    "category": "no_browse",
+    "input": "单细胞",
+    "expect": { "routePath": null }
+  },
+  {
+    "id": "neg-014",
+    "category": "no_browse",
+    "input": "scDRS 是什么",
+    "expect": { "routePath": null }
+  },
+  {
+    "id": "neg-015",
+    "category": "no_browse",
+    "input": "CSDS 是什么意思",
+    "expect": { "routePath": null }
+  },
+  {
+    "id": "neg-016",
+    "category": "no_browse",
+    "input": "ssMOOD 有哪些数据",
+    "expect": { "routePath": null }
+  },
+  {
+    "id": "neg-017",
+    "category": "no_browse",
+    "input": "你好",
+    "expect": { "routePath": null }
+  },
+  {
+    "id": "neg-018",
+    "category": "no_browse",
+    "input": "你能做什么",
+    "expect": { "routePath": null }
+  },
+  {
+    "id": "neg-019",
+    "category": "no_browse",
+    "input": "我想筛选某个脑区的样本，怎么操作？",
+    "expect": { "routePath": null }
+  },
+  {
+    "id": "neg-020",
+    "category": "no_browse",
+    "input": "小鼠和人的空转数据",
+    "expect": { "routePath": null }
+  },
+
+  {
+    "id": "slot-001",
+    "category": "slots",
+    "slots": { "modality": "SC", "species": "mouse", "sex": "male" },
+    "expect": { "routePath": "/browse/SingleCell", "query": { "species": "mouse", "sex": "male" } }
+  },
+  {
+    "id": "slot-002",
+    "category": "slots",
+    "slots": { "modality": "ST", "species": "human", "sex": "female" },
+    "expect": { "routePath": "/browse/SpatialTranscriptome", "query": { "species": "human", "sex": "female" } }
+  },
+  {
+    "id": "slot-003",
+    "category": "slots",
+    "slots": { "modality": "SC", "area": "II" },
+    "expect": {
+      "routePath": "/browse/SingleCell",
+      "query": { "species": "mouse", "area": "II" },
+      "labelContains": "小鼠"
+    }
+  },
+  {
+    "id": "slot-004",
+    "category": "slots",
+    "slots": { "modality": "ST", "species": "mouse", "area": "BA12" },
+    "expect": {
+      "routePath": "/browse/SpatialTranscriptome",
+      "query": { "species": "mouse" },
+      "notQuery": ["area"]
+    }
+  },
+  {
+    "id": "slot-005",
+    "category": "slots",
+    "slots": { "modality": "ATAC", "species": "mouse", "sex": "female" },
+    "expect": { "routePath": "/browse/atac", "query": { "species": "mouse", "sex": "female" } }
+  },
+  {
+    "id": "slot-006",
+    "category": "slots",
+    "slots": { "modality": "SC" },
+    "expect": { "routePath": null }
+  },
+  {
+    "id": "slot-007",
+    "category": "slots",
+    "slots": { "modality": "st", "species": "MOUSE", "sex": "Male" },
+    "expect": { "routePath": "/browse/SpatialTranscriptome", "query": { "species": "mouse", "sex": "male" } }
+  },
+  {
+    "id": "slot-008",
+    "category": "slots",
+    "slots": { "modality": "snRNA", "species": "human" },
+    "expect": { "routePath": "/browse/SingleCell", "query": { "species": "human" } }
+  },
+  {
+    "id": "slot-009",
+    "category": "slots",
+    "slots": { "modality": "ST", "species": "human", "area": "BA9" },
+    "expect": {
+      "routePath": "/browse/SpatialTranscriptome",
+      "query": { "species": "human" },
+      "notQuery": ["area"]
+    }
+  },
+  {
+    "id": "slot-010",
+    "category": "slots",
+    "slots": { "modality": "SC", "species": "human", "area": "BA9" },
+    "expect": { "routePath": "/browse/SingleCell", "query": { "species": "human", "area": "BA9" } }
+  },
+
+  {
+    "id": "col-001",
+    "category": "colloquial",
+    "input": "老老鼠的单细胞数据",
+    "expect": { "routePath": "/browse/SingleCell", "query": { "species": "mouse" } }
+  },
+  {
+    "id": "col-002",
+    "category": "colloquial",
+    "input": "公的 单细胞 小鼠",
+    "expect": { "routePath": "/browse/SingleCell", "query": { "species": "mouse", "sex": "male" } }
+  },
+  {
+    "id": "col-003",
+    "category": "colloquial",
+    "input": "母的空转",
+    "expect": { "routePath": "/browse/SpatialTranscriptome", "query": { "sex": "female" } }
+  },
+  {
+    "id": "col-004",
+    "category": "colloquial",
+    "input": "雄性小鼠单细胞",
+    "expect": { "routePath": "/browse/SingleCell", "query": { "species": "mouse", "sex": "male" } }
+  },
+  {
+    "id": "col-005",
+    "category": "colloquial",
+    "input": "女的 人的单细胞",
+    "expect": { "routePath": "/browse/SingleCell", "query": { "species": "human", "sex": "female" } }
+  },
+  {
+    "id": "col-006",
+    "category": "colloquial",
+    "input": "男性 空间转录组",
+    "expect": { "routePath": "/browse/SpatialTranscriptome", "query": { "sex": "male" } }
+  },
+  {
+    "id": "col-007",
+    "category": "colloquial",
+    "input": "mouse single-cell",
+    "expect": { "routePath": "/browse/SingleCell", "query": { "species": "mouse" } }
+  },
+  {
+    "id": "col-008",
+    "category": "colloquial",
+    "input": "human snRNA data",
+    "expect": { "routePath": "/browse/SingleCell", "query": { "species": "human" } }
+  },
+  {
+    "id": "col-009",
+    "category": "colloquial",
+    "input": "小鼠大脑皮层第二层的单细胞",
+    "expect": { "routePath": "/browse/SingleCell", "query": { "species": "mouse", "area": "II" } }
+  },
+  {
+    "id": "col-010",
+    "category": "colloquial",
+    "input": "皮层第 4 层空转",
+    "expect": { "routePath": "/browse/SpatialTranscriptome", "query": { "species": "mouse", "area": "IV" } }
+  },
+  {
+    "id": "col-011",
+    "category": "colloquial",
+    "input": "BA 12 的空转",
+    "expect": { "routePath": "/browse/SpatialTranscriptome", "query": { "species": "human", "area": "BA12" } }
+  },
+  {
+    "id": "col-012",
+    "category": "colloquial",
+    "input": "brodmann 46 区单细胞",
+    "expect": { "routePath": "/browse/SingleCell", "query": { "species": "human", "area": "BA46" } }
+  },
+  {
+    "id": "col-013",
+    "category": "colloquial",
+    "input": "抑郁症模型小鼠的空转数据",
+    "expect": { "routePath": "/browse/SpatialTranscriptome", "query": { "species": "mouse" } }
+  },
+  {
+    "id": "col-014",
+    "category": "colloquial",
+    "input": "抑郁模型大鼠单细胞",
+    "expect": { "routePath": "/browse/SingleCell", "query": { "species": "mouse" } }
+  },
+  {
+    "id": "col-015",
+    "category": "colloquial",
+    "input": "人类小脑单细胞",
+    "expect": { "routePath": "/browse/SingleCell", "query": { "species": "human" } }
+  },
+  {
+    "id": "col-016",
+    "category": "colloquial",
+    "input": "野生型小鼠单细胞",
+    "expect": { "routePath": "/browse/SingleCell", "query": { "species": "mouse" } }
+  },
+  {
+    "id": "col-017",
+    "category": "colloquial",
+    "input": "有没有女性的单细胞数据",
+    "expect": { "routePath": "/browse/SingleCell", "query": { "sex": "female" } }
+  },
+  {
+    "id": "col-018",
+    "category": "colloquial",
+    "input": "给我看看空转里公鼠的",
+    "expect": { "routePath": "/browse/SpatialTranscriptome", "query": { "species": "mouse", "sex": "male" } }
+  },
+  {
+    "id": "col-019",
+    "category": "colloquial",
+    "input": "ST data for female mice",
+    "expect": { "routePath": "/browse/SpatialTranscriptome", "query": { "species": "mouse", "sex": "female" } }
+  },
+  {
+    "id": "col-020",
+    "category": "colloquial",
+    "input": "空间转录组 雌性 人",
+    "expect": { "routePath": "/browse/SpatialTranscriptome", "query": { "species": "human", "sex": "female" } }
+  }
+]
