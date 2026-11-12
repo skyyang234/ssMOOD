@@ -1,0 +1,25 @@
+<?php
+// 本地 / 生产环境配置模板。
+// 用法：复制为 php/config.local.php 并填入真实值。
+// config.local.php 已在 .gitignore 中，不会被提交。
+//
+// 注意：本文件位于 Web 根目录下，生产环境建议把凭据放到 Web 根目录之外，
+// 例如 /etc/ssmood/db.php（权限 600），再在这里 require 进来。
+
+$servername = 'localhost';
+$dbname = 'ssmood';
+$logFile = __DIR__ . '/logfile.log';
+
+// 数据库凭据：可直接写死，也可从 Web 根目录之外的文件读取
+$creds = [
+    'user' => '',
+    'pass' => '',
+];
+// 示例：$creds = require '/etc/ssmood/db.php';
+$username = $creds['user'];
+$password = $creds['pass'];
+
+// 大模型接口（OpenAI 兼容）
+$openaiApiKey = 'your-api-key';
+$url = 'https://your-endpoint/v1/chat/completions';
+$model = 'your-model';

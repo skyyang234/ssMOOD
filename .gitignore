@@ -25,3 +25,22 @@ pnpm-debug.log*
 DevelopmentLog.md
 package-lock.json
 /php/.cache
+
+# ── 本地凭据（config.php 只保留占位值，真实值写这里）──
+php/config.local.php
+
+# ── 运行时产物 ──
+.tmp_*
+php/__pycache__/
+php/logfile.log
+
+# ── 评测产物（脚本保留，结果不入库）──
+eval/*-result*.md
+eval/*.jsonl
+eval/telemetry-report.json
+
+# ── 内部文档（按需生成，不入库）──
+AI_MODULE_*.md
+AI助手优化路线与评测方案.md
+AI模块功能说明与优化建议.md
+USER_NEEDS_ANALYSIS.md

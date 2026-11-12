@@ -2,46 +2,32 @@
 
 //------------------------------------------------------------------------------
 // 发布时去掉此处代码，仅用于生产和测试环境。
-// 跨域配置
+// 跨域配置（注意：各业务脚本自行设置 Content-Type，此处只设 CORS）
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Credentials: true");
 //------------------------------------------------------------------------------
 
 
-header('Content-Type: application/json');
-// 数据库配置
-$servername = "localhost";
 
-/*
-/etc/ssmood/db.php示例：
-<?php
-return [
-    'user' => '数据库用户名',
-    'pass' => '数据库密码',
-];
+// 数据库配置（这里只放占位值；真实值写在 config.local.php，该文件不入库）
+$servername = 'localhost';
+$dbname = 'ssmood';
+$logFile = __DIR__ . '/logfile.log';
+$creds = [];
+$username = '';
+$password = '';
 
-设置权限，避免泄漏
-sudo chown www-data:www-data /etc/ssmood/db.php
-sudo chmod 600       /etc/ssmood/db.php
-*/
+// 大模型接口（占位值）
+$openaiApiKey = 'your-api-key';
+$url = '';
+$model = '';
 
-$creds = require '/etc/ssmood/db.php';
-$username = $creds['user'];
-$password = $creds['pass'];
-$dbname = "ssmood";
-$logFile = "./logfile.log";
+// ── 本地 / 生产环境覆盖 ────────────────────────────────────────────────
+// 部署时把 config.local.php.example 复制成 config.local.php 并填入真实值。
+// 该文件已被 .gitignore 忽略，不会进入仓库。
+if (file_exists(__DIR__ . '/config.local.php')) {
+    require __DIR__ . '/config.local.php';
+}
 
-// Kimi
-//$openaiApiKey = 'sk-xxx'; 
-//$url = 'https://api.moonshot.cn/v1/chat/completions';
-//$model = 'moonshot-v1-8k';
-
-//DeepSeek-Chat
-//$openaiApiKey = 'sk-xxx'; 
-//$url = 'https://api.deepseek.com/v1/chat/completions';
-//$model = 'deepseek-chat';
-
-// 豆包
-$openaiApiKey = 'xxx'; 
-$url = 'https://ark.cn-beijing.volces.com/api/v3/chat/completions';
-$model = 'doubao-1-5-pro-32k-250115';
+// $servername 可能被本地文件覆盖，这里同步一次（原逻辑：$host 是它的别名）
+$host = $servername;
