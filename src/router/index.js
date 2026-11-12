@@ -5,7 +5,6 @@ import 'nprogress/nprogress.css';  // 引入 NProgress 样式
 import HomeView from '../components/HomeView.vue';
 
 
-
 import SingleCellList from '../components/SingleCellList.vue'; 
 import SingleCellPage from '../components/SingleCellPage.vue'; 
 
@@ -31,7 +30,6 @@ import AIPage from '../components/AIPage.vue';
 
 const routes = [
   { path: '/', name: 'Home', component: HomeView, meta: { requiresLoading: true } },
-
   { path: '/browse', name: 'BrowseHub', component: BrowseHub, meta: { requiresLoading: true } },
   // AI 数据助手（导航栏「AI」）：独立页面，不是浮层
   { path: '/ai', name: 'AIPage', component: AIPage, meta: { requiresLoading: true } },
