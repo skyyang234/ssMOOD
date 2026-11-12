@@ -1,13 +1,135 @@
+/* ============================================================
+   src/styles/element-theme.css
+   ============================================================
+   ssMOOD design tokens. Element Plus overrides + custom vars.
+   Imported by main.js AFTER element-plus/dist/index.css.
+
+   STUDENT: tweak any var below — it cascades to every component.
+   ============================================================ */
+
 :root {
-  --el-color-primary: rgb(93, 116, 162);
-  --el-color-primary-light-3: rgba(93, 116, 162, 0.8);
-  --el-color-primary-light-5: rgba(93, 116, 162, 0.5);
-  --el-color-primary-light-7: rgba(93, 116, 162, 0.4);
-  --el-color-primary-light-9: rgba(93, 116, 162, 0.25);
-  --el-color-primary-dark-2: rgba(93, 116, 162, 0.9);
+  /* ── Element Plus token overrides ── */
+  --el-color-primary:         rgb(74, 127, 193);
+  --el-color-primary-light-3: rgba(74, 127, 193, 0.8);
+  --el-color-primary-light-5: rgba(74, 127, 193, 0.5);
+  --el-color-primary-light-7: rgba(74, 127, 193, 0.4);
+  --el-color-primary-light-9: rgba(74, 127, 193, 0.25);
+
+  /* ── ssMOOD primary scale ── */
+  --ss-primary:        rgb(74, 127, 193);
+  --ss-primary-dark:   rgb(37,  99, 168);
+  --ss-primary-80:     rgba(74, 127, 193, 0.80);
+  --ss-primary-50:     rgba(74, 127, 193, 0.50);
+  --ss-primary-25:     rgba(74, 127, 193, 0.25);
+  --ss-primary-10:     rgba(74, 127, 193, 0.10);
+  --ss-primary-pale:   rgb(220, 232, 245);
+
+  /* ── secondary accents (use sparingly) ── */
+  --ss-teal:           #3a8a72;   /* spatial / mouse data */
+  --ss-teal-pale:      #d8f0e8;
+  --ss-coral:          #c0614a;   /* non-neuron cells / down-regulation */
+  --ss-coral-pale:     #faeae4;
+  --ss-violet:         #6652a8;   /* MDD / clinical accent */
+  --ss-violet-pale:    #ece8f8;
+  --ss-gold:           #b08a30;   /* rare / VLMC accent */
+
+  /* ── neutrals ── */
+  --ss-bg:             #f3f5fb;   /* page background (cool tint) */
+  --ss-surface:        #ffffff;
+  --ss-border:         #dde3ee;
+  --ss-border-soft:    #edf0f7;
+  --ss-text:           #1a2438;
+  --ss-text-2:         #4a6080;
+  --ss-text-3:         #8496b0;
+  --ss-navy:           #162844;   /* dark sections / hero */
+  --ss-navy-deep:      #08121e;   /* UMAP plot bg */
+
+  /* ── status colors (semantic) ── */
+  --ss-success:        var(--ss-teal);
+  --ss-warning:        #d68c2a;
+  --ss-danger:         var(--ss-coral);
+  --ss-info:           var(--ss-primary);
+
+  /* ── typography ── */
+  --ss-font:           'IBM Plex Sans', 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif;
+  --ss-mono:           'IBM Plex Mono', 'Courier New', monospace;
+  --ss-fs-xs:          11px;
+  --ss-fs-sm:          12px;
+  --ss-fs-md:          13.5px;
+  --ss-fs-lg:          16px;
+  --ss-fs-xl:          21px;
+
+  /* ── spacing ── */
+  --ss-nav-h:          56px;
+  --ss-r-sm:           4px;
+  --ss-r-md:           8px;
+  --ss-r-lg:           12px;
+  --ss-r-xl:           20px;
+
+  /* ── shadows ── */
+  --ss-shadow-sm:      0 1px 2px rgba(22, 40, 68, 0.04);
+  --ss-shadow-md:      0 4px 12px rgba(22, 40, 68, 0.08);
+  --ss-shadow-lg:      0 10px 28px rgba(22, 40, 68, 0.14);
+  --ss-shadow-primary: 0 8px 24px rgba(93, 116, 162, 0.20);
+
+  /* ── transitions ── */
+  --ss-tr-fast:        all 0.15s ease;
+  --ss-tr-md:          all 0.25s ease;
 }
-/* 在全局样式文件或 <style>（无 scoped）里写 */
-.el-collapse-item__header {
-  font-weight: 700;      /* 加粗 */
-  font-size: 18px;       /* 字号，可按需调整 */
+
+/* NProgress 路由进度条 — 品牌色 */
+#nprogress .bar {
+  background: var(--ss-primary) !important;
+  height: 2.5px !important;
+}
+#nprogress .peg {
+  box-shadow: 0 0 10px var(--ss-primary), 0 0 5px var(--ss-primary) !important;
+}
+
+/* Element Plus button polish — match our token system */
+.el-button--primary {
+  background: var(--ss-primary) !important;
+  border-color: var(--ss-primary) !important;
+}
+.el-button--primary:hover {
+  background: var(--ss-primary-dark) !important;
+  border-color: var(--ss-primary-dark) !important;
+}
+.el-button--primary.is-plain {
+  background: var(--ss-primary-10) !important;
+  color: var(--ss-primary) !important;
+}
+
+/* Element Plus card — softer borders, smaller shadow */
+.el-card {
+  border-color: var(--ss-border) !important;
+  border-radius: var(--ss-r-lg) !important;
+}
+.el-card.is-hover-shadow:hover {
+  box-shadow: var(--ss-shadow-md) !important;
+}
+
+/* Table polish */
+.el-table {
+  font-family: var(--ss-font) !important;
+}
+.el-table th.el-table__cell {
+  background: var(--ss-bg) !important;
+  color: var(--ss-text-2) !important;
+  font-weight: 500 !important;
+  font-size: var(--ss-fs-xs) !important;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Input polish */
+.el-input__wrapper {
+  border-radius: var(--ss-r-md) !important;
+  box-shadow: 0 0 0 1px var(--ss-border) inset !important;
+}
+.el-input__wrapper:hover {
+  box-shadow: 0 0 0 1px var(--ss-primary-50) inset !important;
+}
+.el-input__wrapper.is-focus {
+  box-shadow: 0 0 0 1px var(--ss-primary) inset !important;
 }

@@ -171,8 +171,11 @@
 // 引入 Element Plus 图标
 import { Location, Message, CopyDocument } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import { useI18n } from 'vue-i18n'
 import BackToTop from './general/BackToTop.vue'
 import NavigationBar from './general/NavigationBar.vue'
+
+const { t } = useI18n()
 
 // 🛡️ 用 JS 拼接邮箱，避免源码直接出现完整地址
 const email1 = ['caoxiong', 'smu.edu.cn'].join('@')
@@ -190,13 +193,13 @@ const safeEmail4 = email4.replace('@', '＠')
 const safeEmail5 = email5.replace('@', '＠')
 const safeEmail6 = email6.replace('@', '＠')
 
-// 复制函数
+// 复制邮箱到剪贴板（提示文案随语言切换）
 const copyEmail = async (email) => {
   try {
     await navigator.clipboard.writeText(email)
-    ElMessage.success('邮箱已复制')
+    ElMessage.success(t('copy_success'))
   } catch (err) {
-    ElMessage.error('复制失败，请手动复制')
+    ElMessage.error(t('copy_fail'))
   }
 }
 </script>

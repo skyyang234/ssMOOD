@@ -8,7 +8,8 @@ This mapping helps ensure reproducibility in research and makes it easier to tra
 ```markdown
 | Running Version | Codebase Version | Release Date | Notes                |
 | --------------- | ---------------- | ------------ | -------------------- |
-| v1.1.1 (Now)    | v4.8.0           | 2026-03-07   | Latest release       |
+| v2.0.0 (Now)    | v4.9.0           | 2026-11-08   | Latest release       |
+| v1.1.1          | v4.8.0           | 2026-03-07   | Third release        |
 | v1.1.0          | v4.7.0           | 2025-08-27   | Second release       |
 | v1.0.0          | v4.6.0           | 2025-07-06   | First major release  |
 
@@ -17,6 +18,19 @@ This mapping helps ensure reproducibility in research and makes it easier to tra
 * **Running Version**: the version number displayed in the software interface or release notes.
 * **Codebase Version**: the internal development version of the core analysis engine.
 * **Notes**: brief description of the release status.
+
+---
+## V2.0.0
+This is a major front-end release that comprehensively modernizes the platform's user interface. It brings a consistent visual style to every page, adds two new overview pages, rebuilds the home page, and redesigns the way integrated datasets are presented. All data interfaces and analysis pipelines remain unchanged.
+
+* **Consistent visual style across all pages**: Unified the color scheme, fonts, spacing, and the appearance of buttons, tables, and cards throughout the platform, so that every page now shares the same clean and modern look.
+* **New Browse and About pages**: Added two overview pages — a **Browse** page that displays all available data types (single-cell RNA-seq, spatial transcriptomics, and modules coming soon) together with the development roadmap, and an **About** page that gathers documentation, news, usage statistics, and contact information in one place.
+* **Rebuilt home page**: The home page was redesigned with a new banner area that includes an animated illustration of cell clusters, a clearer layout, and faster loading of the visit statistics on repeated visits.
+* **Improved navigation bar and footer**: Reorganized the top navigation menu, and replaced the old footer with a new one that displays the running version of the platform.
+* **Redesigned integrated dataset browsing**: The integrated datasets on the Single-cell and Spatial Transcriptomics pages are now presented as clear overview cards instead of the previous diagram with buttons placed on top of it. Each card shows a description, key numbers (species, brain regions, conditions), and quick navigation buttons — an overview of all samples, experimental conditions for mouse studies (0D Control, 3D, 7D, Susceptible, Resilient), and brain regions with diagnosis groups for human studies (e.g., BA46 → 2 Control / 2 MDD) — leading directly to the corresponding integrated study views.
+* **Better loading experience**: Added a branded loading screen that fades out smoothly when the site is ready, avoiding abrupt content switching on first load.
+* **Updated multilingual texts**: Extended the interface texts in English, Simplified Chinese, and Traditional Chinese to cover all new pages and components.
+* **Stability improvements**: Fixed integrated study pages not refreshing when switching between study subsets, and optimized scroll behavior across pages.
 
 ---
 ## V1.1.1

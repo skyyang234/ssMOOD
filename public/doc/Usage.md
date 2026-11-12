@@ -28,10 +28,10 @@ The **Home** page provides a comprehensive overview of the database and highligh
 The **Browse** section enables users to explore datasets in two primary categories:
 
 * **Single-cell datasets**
-  Includes both integrated datasets (aggregated from multiple studies) and individual datasets.As of August 2025, there are 626,425 cells.
+  Includes both integrated datasets (aggregated from multiple studies) and individual datasets. As of August 2025, there are 626,425 cells.
 
 * **ST datasets**
-  Also includes both integrated and individual datasets, supporting both cross-study comparisons and single-study analyses.As of August 2025, there are 5,506,379 ST datas.
+  Also includes both integrated and individual datasets, supporting both cross-study comparisons and single-study analyses. As of August 2025, there are 5,506,379 ST data.
 
 This section is designed to provide intuitive access to raw and processed data, facilitating downstream analyses.
 
@@ -71,21 +71,22 @@ The **Download** section provides direct access to:
 
 ![bp](./doc/img/1.png "bp")
 
-\[1]. **Mobile Navigation**
-* The navigation bar is displayed only on mobile devices or when the viewport width is limited.
+\[1]. **Top Navigation**
+* The top navigation bar provides access to **Home**, **Browse** and **About**, and stays visible across all screen sizes.
 
 \[2]. **Language Switcher**
 * Supports Simplified Chinese, Traditional Chinese, and English.
 
 \[3]. **Integrated Datasets**
-* Click the corresponding button in the chart to access an integrated dataset.
-* Due to the large size of the **mouse ST dataset**, the “All” button is not provided in the integration view.  
+* Integrated datasets are presented as overview cards, one per species.
+* Click **All samples** to open the full integrated view, or use the buttons for experimental conditions and brain region / diagnosis groups to jump directly to a specific subset.
 
-\[4]. **Individual Datasets**
-* Click the dataset ID to view details of a specific dataset.
+\[4]. **Single Datasets**
+* Individual datasets are listed in the table, showing species, sex, condition, region, age, cell count and method.
+* Click a dataset ID to view details of a specific dataset.
 
 \[5]. **Condition Filter**
-* Filter datasets according to selected criteria.
+* Filter datasets by **Species**, **Region** and **Sex** using the dropdown selectors.
 
 ---
 
@@ -102,7 +103,9 @@ Taking the **single-cell integrated dataset page** as an example:
 
 ---
 
-![bp](./doc/img/3.png "bp")
+![bp](./doc/img/3.1.png "bp")
+
+![bp](./doc/img/3.2.png "bp")
 
 * For **ST datasets**, the page displays a **spatial location map**.
 * For **single-cell datasets**, the page displays a **UMAP plot**.

@@ -25,8 +25,8 @@ body {
 
 
 main {
-  margin-top: 8vh; /* 使内容不会被导航栏遮挡，值应与 header 高度匹配 */
-  height: 92vh;
+  margin-top: var(--ss-nav-h, 56px); /* 使内容不会被导航栏遮挡，值与 header 高度匹配 */
+  height: calc(100vh - var(--ss-nav-h, 56px));
   overflow-y: auto; 
 }
 
@@ -62,12 +62,14 @@ main::-webkit-scrollbar-thumb:hover {
 }
 
 
-.studys{
-  display: flex;
-  align-items: center; /* 垂直居中 */
-  justify-content: center; /* 水平居中（如果需要） */
-  flex-direction: row; /* 子元素垂直排列 */
+.studys {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+  align-items: stretch;
 }
+@media (max-width: 768px) { .studys { grid-template-columns: 1fr; } }
  /* ----------------------------------------------------------- */
  /* 竖屏响应*/
 @media (orientation: portrait) {

@@ -2,7 +2,7 @@
 
 // 开发环境配置
 const devConfig = {
-  apiUrl: 'http://172.16.165.245/php/',
+  apiUrl: 'http://127.0.0.1:8789/',
   email:"xxxx@xxx.com"
 };
 

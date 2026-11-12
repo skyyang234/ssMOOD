@@ -14,6 +14,7 @@ import './styles/element-theme.css';
 // 创建国际化实例
 const i18n = createI18n({
   locale: 'en',
+  fallbackLocale: 'zh-CN', // 某语言缺 key 时回退简体中文，避免显示裸 key
   legacy: false,
   globalInjection: true,
   messages: {
@@ -36,5 +37,9 @@ app.use(ElementPlus)
 app.mount('#app');
 window.addEventListener('DOMContentLoaded', () => {
   const loader = document.getElementById('app-loading')
-  if (loader) loader.style.display = 'none'
+  if (loader) {
+    // 先淡出（CSS transition 0.45s），再彻底移除
+    loader.classList.add('is-done')
+    setTimeout(() => { loader.style.display = 'none' }, 500)
+  }
 })

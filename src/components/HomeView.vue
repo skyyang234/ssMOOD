@@ -2,254 +2,143 @@
   <div>
     <NavigationBar></NavigationBar>
     <main>
-      <section class="page-section">
-        <div class="main-con">
-          <!-- <div class="Top-container" @scroll="handleScroll"> -->
-          <div class="Top-container">
-
-            <!-- 第一个容器 -->
-            <el-row :gutter="20">
-              <el-col :span="24">
-                <div class="test">
-                  <video ref="video" src="/ssmood.mov" muted autoplay playsinline loop :playbackRate="0.8"
-                    @ended="handleEnded" @loadedmetadata="handleLoaded" style="width: 80%;" preload="auto"></video>
-                </div>
-              </el-col>
-            </el-row>
-            <el-row :gutter="10" class="container1">
-              <el-col :xs="0" :sm="2" :md="2" :lg="2"></el-col>
-              <el-col :xs="12" :sm="5" :md="5" :lg="5" v-for="(item, index) in items" :key="index">
-                <div class="image-text-item">
-                  <img :src="item.image" :alt="item.alt">
-                  <p>{{ $t(item.textKey) }}<br>{{ item.value }}</p>
-                </div>
-                <el-col :xs="0" :sm="2" :md="2" :lg="2"></el-col>
-              </el-col>
-            </el-row>
-            <!-- 第二个容器 -->
-            <el-row :gutter="20" class="container">
-              <el-col :xs="0" :sm="0" :md="2" :lg="2">
-              </el-col>
-              <!-- 文本部分 -->
-              <el-col :xs="20" :sm="20" :md="8" :lg="8">
-                <div class="text">
-                  <h2>{{ $t('hv5') }}</h2>
-                  <p>{{ $t('hv6') }}</p>
-                </div>
-              </el-col>
-              <!-- 图像和图表切换部分 -->
-              <el-col :xs="20" :sm="20" :md="12" :lg="12">
-                <div class="image">
-                  <div class="chart-switch">
-                    <div class="chart-item" :class="{ 'active': currentChart === 3 }" @click="switchChart(3)">
-                      <div class="chart-dot"></div>
-                      <span>{{ $t('hv6-4') }}</span>
-                    </div>
-                    <div class="chart-item" :class="{ 'active': currentChart === 2 }" @click="switchChart(2)">
-                      <div class="chart-dot"></div>
-                      <span>{{ $t('hv6-3') }}</span>
-                    </div>
-                    <div class="chart-item" :class="{ 'active': currentChart === 1 }" @click="switchChart(1)">
-                      <div class="chart-dot"></div>
-                      <span>{{ $t('hv6-2') }}</span>
-                    </div>
-
-                    <div class="chart-item" :class="{ 'active': currentChart === 0 }" @click="switchChart(0)">
-                      <div class="chart-dot"></div>
-                      <span>{{ $t('hv6-1') }}</span>
-                    </div>
-
-
-                  </div>
-                  <div id="myClusterChart" style="width: 100%; height: auto;"></div>
-                </div>
-              </el-col>
-              <el-col :xs="0" :sm="0" :md="2" :lg="2"></el-col>
-            </el-row>
-            <!-- 第三个容器 -->
-            <el-row :gutter="20" class="container" data-special="true">
-              <el-col :xs="0" :sm="0" :md="2" :lg="2"></el-col>
-              <!-- 第一列：图表1 -->
-              <el-col :xs="24" :sm="12" :md="7" :lg="7">
-                <div class="chart-wrapper">
-                  <div id="genderChart" style="width: auto; height: 100%;"></div>
-                </div>
-              </el-col>
-
-              <!-- 第二列：图表2 -->
-              <el-col :xs="24" :sm="12" :md="7" :lg="7">
-                <div class="chart-wrapper">
-                  <div id="genderChart2" style="width: auto; height: 100%;"></div>
-                </div>
-              </el-col>
-
-              <!-- 第三列：文本内容 -->
-              <el-col :xs="20" :sm="20" :md="6" :lg="6">
-                <div class="text-content">
-                  <h2>{{ $t('hv7') }}</h2>
-                  <p>{{ $t('hv8') }}</p>
-                </div>
-              </el-col>
-            </el-row>
-            <!-- 第四个容器 -->
-            <el-row :gutter="20" class="container">
-              <!-- 文本部分 -->
-              <el-col :xs="0" :sm="0" :md="2" :lg="2"></el-col>
-              <el-col :xs="20" :sm="20" :md="10" :lg="10">
-                <div class="text">
-                  <h2>{{ $t('hv9') }}</h2>
-                  <ul>
-                    <li>{{ $t('hv10-1') }}</li>
-                  </ul>
-                  <ul>
-                    <li>{{ $t('hv10-2') }}</li>
-                  </ul>
-                  <ul>
-                    <li>{{ $t('hv10-3') }}</li>
-                  </ul>
-                </div>
-              </el-col>
-              <!-- 图像和图表切换部分 -->
-              <el-col :xs="20" :sm="20" :md="10" :lg="10">
-                <div class="image">
-                  <div class="chart-switch">
-                    <div class="chart-item" :class="{ 'active': currentUmapChart === 3 }" @click="switchUmapChart(3)">
-                      <div class="chart-dot"></div>
-                      <span>{{ $t('hv6-4') }}</span>
-                    </div>
-                    <div class="chart-item" :class="{ 'active': currentUmapChart === 2 }" @click="switchUmapChart(2)">
-                      <div class="chart-dot"></div>
-                      <span>{{ $t('hv6-3') }}</span>
-                    </div>
-                    <div class="chart-item" :class="{ 'active': currentUmapChart === 1 }" @click="switchUmapChart(1)">
-                      <div class="chart-dot"></div>
-                      <span>{{ $t('hv6-2') }}</span>
-                    </div>
-                    <div class="chart-item" :class="{ 'active': currentUmapChart === 0 }" @click="switchUmapChart(0)">
-                      <div class="chart-dot"></div>
-                      <span>{{ $t('hv6-1') }}</span>
-                    </div>
-                  </div>
-                  <!-- UMAP图的容器 -->
-                  <div style="position: relative; width: 100%; aspect-ratio: 1 / 1;">
-                    <!-- 加载图 -->
-                    <img v-if="umapLoading" src="/loading.gif" alt="Loading"
-                      style="position: absolute;inset: 0;margin: auto;width: 80% ;height: 80% ;object-fit: contain;z-index: 1;" />
-
-                    <!-- Plotly 图表容器 -->
-                    <div id="hv-umap-plot"
-                      :style="{ width: '100%', aspectRatio: '1 / 1', visibility: umapLoading ? 'hidden' : 'visible' }">
-                    </div>
-                  </div>
-
-                </div>
-              </el-col>
-              <el-col :xs="0" :sm="0" :md="2" :lg="2"></el-col>
-            </el-row>
-            <!-- 第五个容器 -->
-            <el-row :gutter="20" class="container" data-special="true">
-              <!-- 图像部分 -->
-              <el-col :xs="0" :sm="0" :md="2" :lg="2"></el-col>
-              <el-col :xs="20" :sm="20" :md="10" :lg="10">
-                <div class="image">
-                  <img src="@/assets/demo1.png" width="80%" />
-                </div>
-              </el-col>
-              <!-- 文本部分 -->
-              <el-col :xs="20" :sm="20" :md="10" :lg="10">
-                <div class="text">
-                  <h2>{{ $t('hv11') }}</h2>
-                  <p>{{ $t('hv12') }}</p>
-                </div>
-              </el-col>
-              <el-col :xs="0" :sm="0" :md="2" :lg="2"></el-col>
-            </el-row>
-            <!-- 第六个容器 -->
-            <!-- <div class="container">
-                  <div class="text">
-                    <h2>{{ $t('hv13') }}</h2>
-                    <p>{{ $t('hv14') }}</p>
-                    <button @click="gotoAnalyzePage" class="goto-button">{{ $t('hv16') }}</button>
-                  </div>
-                  <div class="image">
-                    <canvas id="plot-canvas" width="400px" height="400px"></canvas>
-                  </div>
-                </div> -->
-
+      <!-- ═══ ① Hero：全幅点云画布 + 标题文案 + 关键指标 ═══ -->
+      <section class="hv-hero" ref="heroEl">
+        <canvas ref="heroCanvas" class="hv-hero-canvas"></canvas>
+        <div class="hv-hero-fade"></div>
+        <div class="hv-hero-inner">
+          <div class="hv-hero-content hv-reveal">
+            <div class="hv-hero-badge"><span class="hv-badge-pulse"></span>{{ $t('home_badge', { n: formatNum(clusterNum) }) }}</div>
+            <h1 class="hv-hero-title">ss<strong>MOOD</strong></h1>
+            <p class="hv-hero-sub" v-html="$t('home_hero_sub')"></p>
+            <div class="hv-hero-tagline">{{ $t('home_hero_tagline') }}</div>
+            <div class="hv-hero-actions">
+              <router-link to="/browse" class="hv-btn-primary">{{ $t('home_btn_browse') }} &rarr;</router-link>
+            </div>
           </div>
-          <BackToTop :target-selector="'.Top-container'"></BackToTop>
 
+          <div class="hv-stats">
+            <div v-for="(item, index) in items" :key="index" class="hv-stat hv-reveal">
+              <div class="hv-stat-icon">
+                <img :src="item.image" :alt="item.alt">
+              </div>
+              <div class="hv-stat-info">
+                <div class="hv-stat-value">{{ formatNum(item.value) }}</div>
+                <div class="hv-stat-label">{{ $t(item.textKey) }}</div>
+              </div>
+            </div>
+          </div>
         </div>
-
       </section>
 
+      <!-- ═══ ② 数据库介绍 + 数据集柱状图 ═══ -->
+      <section class="hv-section">
+        <div class="hv-shell hv-grid">
+          <div class="hv-copy hv-reveal">
+            <span class="hv-eyebrow">01 · Overview</span>
+            <h2>{{ $t('hv5') }}</h2>
+            <p>{{ $t('hv6') }}</p>
+          </div>
+          <div class="hv-chart-card hv-reveal">
+            <div class="hv-tabs">
+              <button v-for="i in [3, 2, 1, 0]" :key="'bar-' + i" class="hv-tab"
+                :class="{ active: currentChart === i }" @click="switchChart(i)">
+                {{ $t('hv6-' + (i + 1)) }}
+              </button>
+            </div>
+            <div id="myClusterChart" class="hv-bar-chart"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══ ③ 数据组成 + 物种/细胞占比环形图 ═══ -->
+      <section class="hv-section hv-tint">
+        <div class="hv-shell hv-grid-donut">
+          <div class="hv-chart-card hv-reveal">
+            <div id="genderChart" class="hv-donut"></div>
+          </div>
+          <div class="hv-chart-card hv-reveal">
+            <div id="genderChart2" class="hv-donut"></div>
+          </div>
+          <div class="hv-copy hv-reveal">
+            <span class="hv-eyebrow">02 · Composition</span>
+            <h2>{{ $t('hv7') }}</h2>
+            <p>{{ $t('hv8') }}</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══ ④ 可交互式图表 + UMAP ═══ -->
+      <section class="hv-section">
+        <div class="hv-shell hv-grid">
+          <div class="hv-copy hv-reveal">
+            <span class="hv-eyebrow">03 · Interactive Charts</span>
+            <h2>{{ $t('hv9') }}</h2>
+            <ul class="hv-list">
+              <li>{{ $t('hv10-1') }}</li>
+              <li>{{ $t('hv10-2') }}</li>
+              <li>{{ $t('hv10-3') }}</li>
+            </ul>
+          </div>
+          <div class="hv-chart-card hv-reveal">
+            <div class="hv-tabs">
+              <button v-for="i in [3, 2, 1, 0]" :key="'umap-' + i" class="hv-tab"
+                :class="{ active: currentUmapChart === i }" @click="switchUmapChart(i)">
+                {{ $t('hv6-' + (i + 1)) }}
+              </button>
+            </div>
+            <div class="hv-umap-wrap">
+              <img v-if="umapLoading" src="/loading.gif" alt="Loading" class="hv-umap-loading" />
+              <div id="hv-umap-plot" class="hv-umap-plot"
+                :style="{ visibility: umapLoading ? 'hidden' : 'visible' }"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══ ⑤ 整合数据集 ═══ -->
+      <section class="hv-section hv-tint">
+        <div class="hv-shell hv-grid">
+          <div class="hv-image-card hv-reveal">
+            <img src="@/assets/demo1.png" alt="Integrated datasets" />
+          </div>
+          <div class="hv-copy hv-reveal">
+            <span class="hv-eyebrow">04 · Integration</span>
+            <h2>{{ $t('hv11') }}</h2>
+            <p>{{ $t('hv12') }}</p>
+          </div>
+        </div>
+      </section>
+
+      <BackToTop></BackToTop>
     </main>
-
   </div>
-
-
 </template>
 
 <script setup>
 import Plotly from 'plotly.js-dist-min';
 import pako from 'pako';
 import { ref, onMounted } from 'vue';
-//import { useRouter } from 'vue-router';
 
 //----------以下为一个ssmood页面需要的最基础的东西--------------
-//import { useI18n } from 'vue-i18n';
 import BackToTop from './general/BackToTop.vue';
-//import LanguageSwitcher from './general/LanguageSwitcher.vue';
 import NavigationBar from './general/NavigationBar.vue';
 import config from '@/config';
 //----------以上为一个ssmood页面需要的最基础的东西--------------
 
 import colorMap from './color_map.js';
-const video = ref(null)
-
-function handleLoaded() {
-  const el = video.value
-  el.play()
-}
-
-function handleEnded() {
-  const el = video.value
-
-  // 防止闪屏做法：立即跳到0.01而不是0
-  el.currentTime = 0.01
-  el.play()
-}
+import { initHeroDots } from './heroDots.js';
+/* HERO CANVAS — 动画点云（借鉴 ssMOOD 1.0 首页） */
+const heroCanvas = ref(null)
+const heroEl = ref(null)
 //-------------------
-//处理定位滚动逻辑
+//数字格式化（千分位）
 //-------------------
-/*
-import { throttle } from 'lodash';
-
-const handleScroll = (event) => {
-  const topContainer = event.target;
-  const containers = Array.from(topContainer.querySelectorAll('.container'));
-  const currentScrollPosition = topContainer.scrollTop;
-
-  let closestContainer = containers[0];
-  let minDistance = Math.abs(currentScrollPosition - closestContainer.offsetTop);
-
-  containers.forEach((container) => {
-    const distance = Math.abs(currentScrollPosition - container.offsetTop);
-    if (distance < minDistance) {
-      minDistance = distance;
-      closestContainer = container;
-    }
-  });
-
-  // 添加动画类
-  containers.forEach((container) => {
-    container.classList.remove('fade-in');
-  });
-  closestContainer.classList.add('fade-in');
-};
-
-throttle(handleScroll, 300); // 限制每100ms内只执行一次
-*/
+const formatNum = (v) => {
+  if (v === null || v === undefined || v === '') return '--'
+  const n = Number(v)
+  return Number.isNaN(n) ? v : n.toLocaleString('en-US')
+}
 
 //-------------------
 //获取数据库基础信息
@@ -267,8 +156,6 @@ onMounted(async () => {
     console.error('Error loading data:', error);
   }
 });
-
-
 
 const currentChart = ref(3); // 当前显示的图表索引
 const cellNum = ref(0);
@@ -311,7 +198,11 @@ const renderChart = (index) => {
 
   // 创建布局
   const layout = {
-    title: renderChart_title[index],
+    title: {
+      text: renderChart_title[index],
+      font: { size: 15, color: '#1a2438' }
+    },
+    margin: { l: 60, r: 20, b: 90, t: 50 },
     xaxis: {
       title: '',
       tickangle: -45, // 将标签旋转45度
@@ -321,8 +212,11 @@ const renderChart = (index) => {
     yaxis: {
       title: '',
       showgrid: true,
-      zeroline: true
-    }
+      zeroline: true,
+      gridcolor: 'rgba(221, 227, 238, 0.7)'
+    },
+    paper_bgcolor: 'rgba(0,0,0,0)',
+    plot_bgcolor: 'rgba(0,0,0,0)'
   };
 
   // 绘制图表
@@ -334,7 +228,6 @@ const switchChart = (index) => {
   currentChart.value = index;
   renderChart(index);
 };
-
 
 // 加载数据
 onMounted(async () => {
@@ -351,8 +244,6 @@ onMounted(async () => {
     console.error('Error fetching and decompressing UMAP data:', error);
   }
 });
-
-
 
 //-------------------
 //获取物种比例
@@ -384,8 +275,8 @@ onMounted(async () => {
           text: 'Species Ratio',
           font: {
             family: 'Arial, sans-serif',
-            size: 20,
-            color: 'black'
+            size: 17,
+            color: '#1a2438'
           }
         },
         paper_bgcolor: 'rgba(0,0,0,0)', // 设置图表背景透明
@@ -394,7 +285,7 @@ onMounted(async () => {
           l: 50,
           r: 50,
           b: 100,
-          t: 80
+          t: 60
         },
         showlegend: true,
         legend: {
@@ -402,7 +293,7 @@ onMounted(async () => {
           y: -0.5, // 将图例放在下方中间
           orientation: 'w', // 图例水平排列
           bgcolor: 'rgba(0,0,0,0)',
-          bordercolor: 'grey',
+          bordercolor: '#dde3ee',
           borderwidth: 1
         }
       };
@@ -441,8 +332,8 @@ onMounted(async () => {
           text: 'Cells Ratio',
           font: {
             family: 'Arial, sans-serif',
-            size: 20,
-            color: 'black'
+            size: 17,
+            color: '#1a2438'
           }
         },
         paper_bgcolor: 'rgba(0,0,0,0)', // 设置图表背景透明
@@ -451,14 +342,15 @@ onMounted(async () => {
           l: 50,
           r: 50,
           b: 100,
-          t: 80
+          t: 60
         },
         showlegend: true,
         legend: {
           x: 0.2,
           y: -0.5, // 将图例放在下方中间
+          orientation: 'w', // 图例水平排列
           bgcolor: 'rgba(0,0,0,0)',
-          bordercolor: 'grey',
+          bordercolor: '#dde3ee',
           borderwidth: 1
         }
       };
@@ -483,7 +375,6 @@ const switchUmapChart = (index) => {
   currentUmapChart.value = index;
   renderUmapChart(index);
 };
-
 
 // 渲染UMAP图表
 const renderUmapChart = (index) => {
@@ -510,7 +401,6 @@ const renderUmapChart = (index) => {
       return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
     }
   });
-
 
   const colors = sortedClusterLabels.reduce((acc, label) => {
     acc[label] = colorMap[label] || '#000'; // 如果没有找到对应的颜色，则使用默认颜色 #000
@@ -583,338 +473,457 @@ onMounted(async () => {
 });
 
 //------
+//窗口缩放时重绘图表
+//------
 onMounted(() => {
   window.addEventListener('resize', resizeMyChart);
 });
+
+/* 启动 HERO 点云动画 */
+let stopHeroDots = null;
+onMounted(() => {
+  if (heroCanvas.value && heroEl.value) {
+    stopHeroDots = initHeroDots(heroCanvas.value, heroEl.value);
+  }
+});
 const resizeMyChart = () => {
-  Plotly.Plots.resize('myClusterChart');
-  Plotly.Plots.resize('genderChart');
-  Plotly.Plots.resize('genderChart2');
-  Plotly.Plots.resize('hv-umap-plot');
+  ['myClusterChart', 'genderChart', 'genderChart2', 'hv-umap-plot'].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) Plotly.Plots.resize(el);
+  });
 };
+
+//------------------------
+//滚动进入视口时的浮现动画
+//------------------------
+let revealObserver = null;
+onMounted(() => {
+  revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        revealObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.hv-reveal').forEach((el) => revealObserver.observe(el));
+});
 
 import { onUnmounted } from 'vue';
 onUnmounted(() => {
+  stopHeroDots?.();
   window.removeEventListener('resize', resizeMyChart);
+  revealObserver?.disconnect();
 });
-//------------------------
-//跳转到分析页面
-//------------------------
-/*
-const router = useRouter();
-const gotoAnalyzePage = () => {
-  router.push('/analyze'); 
-};
-*/
 </script>
 
 <style scoped>
 @import 'css/MainStyles.css';
 
-.main {
-  overflow-y: hidden;
-}
+/* ============================================================
+   首页 2.0 样式 — 基于设计令牌 (src/styles/element-theme.css)
+   ============================================================ */
 
-.page-section {
-  padding: 0px;
-  flex: 1;
-  /* 占据剩余的空间 */
-}
-
-.Top-container {
-  overflow-y: scroll;
-  overflow-x: hidden;
-  height: 92vh;
-  /* scroll-snap-type: y mandatory;  启用滚动捕获 */
-  justify-content: center;
-  /* 水平居中 */
-}
-
-/* 滚动条整体宽度 */
-.Top-container::-webkit-scrollbar {
-  width: 10px;
-  /* 宽度 */
-}
-
-/* 滚动条的轨道背景 */
-.Top-container::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  /* 轨道背景颜色 */
-  border-radius: 10px;
-  /* 轨道圆角 */
-}
-
-/* 滚动条的滑块（可拖动部分） */
-.Top-container::-webkit-scrollbar-thumb {
-  background: rgba(093, 116, 162, 0.8);
-  /* 滑块颜色 */
-  border-radius: 10px;
-  /* 滑块圆角 */
-}
-
-/* 滑块悬停时的样式 */
-.Top-container::-webkit-scrollbar-thumb:hover {
-  background: #555;
-  /* 悬停时的颜色 */
-}
-
-.container {
+/* ── ① Hero ── */
+.hv-hero {
+  position: relative;
+  overflow: hidden;
+  height: 560px;
+  background: #edf1f8;
   display: flex;
-  justify-content: center;
-  /* 水平居中 */
   align-items: center;
-  /* 垂直居中 */
-  min-height: 80vh;
-  height: auto;
-  width: 100%;
-  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+  border-bottom: 1px solid var(--ss-border-soft);
 }
-
-.container1 {
-  width: 80%;
+.hv-hero-inner {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  padding: 0 72px;
+  max-width: 1240px;
   margin: 0 auto;
-  padding: 0 20px;
-  width: 100%;
-
-}
-
-.fade-in {
-  animation: fadeIn 1s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
-
-.container[data-special="true"] {
-  background-color: rgba(84, 164, 255, 0.1);
-}
-
-.container .image {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  /* 垂直居中 */
+  justify-content: center;
+  gap: 30px;
+}
+.hv-hero-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
   height: 100%;
 }
-
-.container .text {
-  width: 100%;
-  /* 限制文字宽度为300px */
-  /* 或使用 width 代替 max-width 来设定固定宽度 */
-  word-wrap: break-word;
-  /* 自动换行 */
+.hv-hero-fade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg,
+    rgba(237, 241, 248, .98) 0%,
+    rgba(237, 241, 248, .94) 35%,
+    rgba(237, 241, 248, .72) 50%,
+    rgba(237, 241, 248, .14) 68%,
+    transparent 80%);
 }
-
-.container.fade-in {
-  opacity: 1;
-  transform: translateY(0);
+.hv-hero-content {
+  max-width: 600px;
+  padding: 24px 0;
 }
-
-
-.test {
-  display: flex;
-  justify-content: center;
-  /* 水平居中 */
-  align-items: flex-start;
-  /* 从容器顶部开始对齐 */
-  margin: 0;
-  /* 容器没有额外间距 */
-  position: relative;
-  /* 设置相对定位 */
-}
-
-.test video {
-  width: 80%;
-  /* 图片宽度不超过容器宽度 */
-  height: auto;
-  /* 保持图片的纵横比 */
-  position: relative;
-  /* 设置相对定位 */
-  top: 20px;
-  /* 图片距离顶部 20px */
-  padding: 30px;
-}
-
-
-
-.chart-switch {
-  display: flex;
-  justify-content: center;
-  margin-top: 20px;
-}
-
-.chart-item {
-  display: flex;
+.hv-hero-badge {
+  display: inline-flex;
   align-items: center;
-  cursor: pointer;
-  margin: 0 10px;
+  gap: 8px;
+  background: #fff;
+  border: 1.5px solid #dde3ee;
+  color: var(--ss-primary);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  padding: 5px 14px;
+  border-radius: 100px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .07);
 }
-
-.chart-dot {
-  width: 16px;
-  height: 16px;
+.hv-badge-pulse {
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background-color: #ccc;
-  margin-right: 8px;
-  /* 点和文字之间的间距 */
-  transition: transform 0.3s ease, background-color 0.3s ease;
+  background: #5aab8a;
+  animation: hvPulse 2.2s ease-in-out infinite;
 }
-
-.chart-item.active .chart-dot {
-  background-color: rgb(093, 116, 162);
-  animation: jump 0.5s forwards;
+@keyframes hvPulse {
+  0%, 100% { opacity: .6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.6); }
 }
-
-
-.chart-item span {
+.hv-hero-title {
+  font-size: 60px;
+  font-weight: 200;
+  line-height: 1;
+  letter-spacing: -2px;
+  color: var(--ss-text);
+  margin: 0 0 10px;
+}
+.hv-hero-title strong {
+  font-weight: 700;
+  color: #162844;
+}
+.hv-hero-sub {
   font-size: 14px;
-  color: #333;
+  line-height: 1.8;
+  color: var(--ss-text-2);
+  margin: 0 0 12px;
+  max-width: 460px;
 }
-
-.chart-item.active span {
-  color: rgb(093, 116, 162);
+.hv-hero-tagline {
+  font-size: 12px;
+  font-family: var(--ss-mono);
+  color: #3f8f70;
+  letter-spacing: .06em;
+  margin-bottom: 28px;
+  padding-left: 12px;
+  border-left: 2px solid #5aab8a;
 }
-
-@keyframes jump {
-  0% {
-    transform: scale(1);
-  }
-
-  50% {
-    transform: translateY(-10px) scale(1.2);
-  }
-
-  100% {
-    transform: scale(1);
-  }
-}
-
-.image-text-item {
+.hv-hero-actions {
   display: flex;
-  /* 启用flex布局 */
+  gap: 12px;
+}
+.hv-btn-primary {
+  display: inline-flex;
   align-items: center;
-  /* 垂直居中对齐 */
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--ss-primary);
+  padding: 11px 24px;
+  border-radius: var(--ss-r-md);
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(37, 99, 168, .22);
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.hv-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(37, 99, 168, .28);
+}
+
+/* 关键指标条 */
+.hv-stats {
+  margin-top: 28px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+.hv-stat {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--ss-surface);
+  border: 1px solid var(--ss-border);
+  border-radius: var(--ss-r-lg);
+  padding: 16px 18px;
+  box-shadow: var(--ss-shadow-sm);
+  transition: var(--ss-tr-md);
+}
+.hv-stat:hover {
+  box-shadow: var(--ss-shadow-md);
+  transform: translateY(-2px);
+  border-color: var(--ss-primary-50);
+}
+.hv-stat-icon {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
   justify-content: center;
-  /* 水平居中对齐（可选） */
-  gap: 15px;
-  /* 图片和文字之间的间距 */
-  text-align: left;
-  /* 文字左对齐 */
-  padding: 10px;
+  background: var(--ss-primary-10);
+  border-radius: var(--ss-r-md);
+}
+.hv-stat-icon img {
+  max-width: 30px;
+  max-height: 30px;
+}
+.hv-stat-value {
+  font-family: var(--ss-mono);
+  font-size: 21px;
+  font-weight: 600;
+  color: var(--ss-text);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.hv-stat-label {
+  margin-top: 3px;
+  font-size: 12px;
+  color: var(--ss-text-2);
+  line-height: 1.4;
 }
 
-.image-text-item img {
-  max-width: 40%;
-  height: auto;
+/* ── 通用 section ── */
+.hv-section {
+  padding: 84px 24px;
+}
+.hv-section.hv-tint {
+  background: linear-gradient(180deg, var(--ss-bg) 0%, #eef2f9 100%);
+  border-top: 1px solid var(--ss-border-soft);
+  border-bottom: 1px solid var(--ss-border-soft);
+}
+.hv-shell {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+/* 两栏（文 + 图） */
+.hv-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: 56px;
+  align-items: center;
+}
+/* 三栏（图 + 图 + 文） */
+.hv-grid-donut {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.9fr);
+  gap: 28px;
+  align-items: center;
+}
+
+/* ── 文案块 ── */
+.hv-copy .hv-eyebrow {
+  display: inline-block;
+  font-family: var(--ss-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ss-primary);
+  background: var(--ss-primary-10);
+  border: 1px solid var(--ss-primary-25);
+  border-radius: 999px;
+  padding: 4px 12px;
+  margin-bottom: 16px;
+}
+.hv-copy h2 {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--ss-text);
+  letter-spacing: -0.01em;
+  margin: 0 0 14px;
+}
+.hv-copy p {
+  font-size: 15px;
+  line-height: 1.9;
+  color: var(--ss-text-2);
   margin: 0;
-  /* 清除可能存在的默认边距 */
+}
+.hv-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.hv-list li {
+  position: relative;
+  padding-left: 22px;
+  margin-bottom: 14px;
+  font-size: 14.5px;
+  line-height: 1.8;
+  color: var(--ss-text-2);
+}
+.hv-list li::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 11px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ss-primary);
+  box-shadow: 0 0 0 3px var(--ss-primary-25);
 }
 
-.chart-wrapper {
-  padding: 15px;
-  height: 100%;
+/* ── 图表卡片 ── */
+.hv-chart-card {
+  background: var(--ss-surface);
+  border: 1px solid var(--ss-border);
+  border-radius: var(--ss-r-xl);
+  padding: 20px;
+  box-shadow: var(--ss-shadow-md);
+}
+.hv-image-card {
+  background: var(--ss-surface);
+  border: 1px solid var(--ss-border);
+  border-radius: var(--ss-r-xl);
+  padding: 18px;
+  box-shadow: var(--ss-shadow-md);
+}
+.hv-image-card img {
+  width: 100%;
+  height: auto;
+  border-radius: var(--ss-r-lg);
+  display: block;
+}
+
+/* ── 图表切换 pills ── */
+.hv-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.hv-tab {
+  appearance: none;
+  border: 1px solid var(--ss-border);
+  background: var(--ss-surface);
+  color: var(--ss-text-2);
+  font-family: var(--ss-font);
+  font-size: 12.5px;
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: var(--ss-tr-fast);
+  line-height: 1.5;
+}
+.hv-tab:hover {
+  color: var(--ss-primary);
+  border-color: var(--ss-primary-50);
+  background: var(--ss-primary-10);
+}
+.hv-tab.active {
+  background: var(--ss-primary);
+  border-color: var(--ss-primary);
+  color: #ffffff;
+  box-shadow: var(--ss-shadow-primary);
+}
+
+/* 图表容器高度（Plotly 需要确定高度） */
+.hv-bar-chart {
+  width: 100%;
+  height: 400px;
+}
+.hv-donut {
+  width: 100%;
+  height: 320px;
+}
+
+/* ── UMAP ── */
+.hv-umap-wrap {
+  position: relative;
   width: 100%;
 }
-
-
-.goto-button {
-  padding: 10px 20px;
-  margin-top: 10px;
-  background-color: rgb(093, 116, 162);
-  color: white;
-  border: none;
-  border-radius: 5px;
-  font-size: 16px;
-  cursor: pointer;
-  /* 鼠标悬停时显示手型指针 */
-  outline: none;
-  /* 移除焦点时的轮廓 */
+.hv-umap-plot {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+}
+.hv-umap-loading {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 60%;
+  height: 60%;
+  object-fit: contain;
+  z-index: 1;
 }
 
-.execute-button:hover {
-  background-color: rgba(093, 116, 162, 0.8);
-  /* 鼠标悬停时的背景颜色 */
+/* ── 浮现动画 ── */
+.hv-reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.hv-reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+/* 尊重系统"减少动态效果"设置 */
+@media (prefers-reduced-motion: reduce) {
+  .hv-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
 }
 
-
-/* ----------------------------------------------------------- */
-/* 竖屏响应*/
-@media (orientation: portrait) or (max-width: 800px) {
-  .test img {
-    width: 100%;
-    /* 图片宽度不超过容器宽度 */
-    height: auto;
-    /* 保持图片的纵横比 */
-    position: relative;
-    /* 设置相对定位 */
-    top: 20px;
-    /* 图片距离顶部 20px */
+/* ============================================================
+   响应式
+   ============================================================ */
+@media (max-width: 1024px) {
+  .hv-section { padding: 56px 16px; }
+  .hv-hero { height: auto; min-height: 480px; }
+  .hv-hero-inner { padding: 40px 24px; }
+  .hv-hero-title { font-size: 44px; }
+  .hv-hero-content { max-width: 100%; }
+  .hv-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
   }
-
-  .container1 {
-    max-width: 100vw;
-    margin: 0;
-    padding: 0;
+  .hv-grid-donut {
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
   }
-
-  .image-text-container p {
-    white-space: nowrap;
-    /* 阻止文本换行 */
+  /* 数据组成：文案在窄屏时排到最前，先读文字再看图 */
+  .hv-grid-donut .hv-copy { order: -1; }
+  .hv-copy h2 { font-size: 22px; }
+}
+@media (max-width: 640px) {
+  .hv-stats {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
   }
-
-  .image-text-item img {
-    max-width: 70%;
-    height: auto;
+  .hv-stat { padding: 12px 14px; }
+  .hv-stat-value { font-size: 17px; }
+  .hv-stat-label { font-size: 11px; }
+  .hv-grid-donut { grid-template-columns: 1fr; }
+  .hv-section { padding: 44px 14px; }
+  .hv-bar-chart { height: 320px; }
+  .hv-donut { height: 280px; }
+  .hv-hero { min-height: 0; }
+  .hv-hero-inner { padding: 32px 18px; gap: 22px; }
+  .hv-hero-title { font-size: 34px; letter-spacing: -1px; }
+  .hv-hero-sub { font-size: 13px; }
+  .hv-hero-fade {
+    background: linear-gradient(180deg,
+      rgba(237, 241, 248, .96) 0%,
+      rgba(237, 241, 248, .9) 55%,
+      rgba(237, 241, 248, .75) 100%);
   }
-
-  .image-text-item {
-    flex-direction: column;
-    /* 改为纵向排列 */
-    align-items: center;
-    /* 居中对齐 */
-    text-align: center;
-    /* 文字居中 */
-    gap: 8px;
-    /* 调整间距 */
-  }
-
-  .container {
-    width: 100%;
-    height: auto;
-  }
-
-  .Top-container {
-    width: 100%;
-    flex-direction: column;
-    align-items: center;
-    /* 垂直居中 */
-    justify-content: center;
-    /* 水平居中 */
-    gap: 50px;
-  }
-
-  .main-con {
-    width: 100%;
-    gap: 15px;
-  }
-
-  .chart-wrapper {
-    height: 40vh;
-    width: auto;
-  }
-
-  .text-content {
-    padding: 30px 20px;
-  }
-
-
 }
 </style>

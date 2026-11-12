@@ -82,4 +82,4 @@ df = df.rename(columns={
 })
 print(df.to_json(orient='records'))
 ```
-返回字段：`t` 通路名称，`p` 校正后 p 值，`o` 比值比，`c` 综合评分，`g` 命中基因。翻译为英文
+返回字段：`t` 通路名称，`p` 校正后 p 值，`o` 比值比，`c` 综合评分，`g` 命中基因。

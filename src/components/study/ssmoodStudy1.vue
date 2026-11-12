@@ -1,169 +1,85 @@
 <template>
-  <div class="navigation-container">
-    <div class="image-container">
-      <img src="@/assets/Mouse-CSDS.png" alt="Navigation Image" class="navigation-image" />
-      <!-- 按钮 1 -->
-      <button class="navigation-button button-1" @click="goToPage('study1.conditions.0D')">
-        0Day(Control)
-      </button>
-      <!-- 按钮 2 -->
-      <button class="navigation-button button-2" @click="goToPage('study1.conditions.3D')">
-        3Day
-      </button>
-      <!-- 按钮 3  7D -->
-      <button class="navigation-button button-3" @click="goToPage('study1.conditions.7D')">
-        7Day
-      </button>
-      <!-- 按钮 4 -->
-      <button class="navigation-button button-4" @click="goToPage('study1.conditions.S')">
-        Sus
-      </button>
-      <!-- 按钮 5 -->
-      <button class="navigation-button button-5" @click="goToPage('study1.conditions.R')">
-        Res
-      </button>
-
-      <!-- 按钮 6 -->
-      <button class="navigation-button button-6" @click="goToPage('study1.area.I')">
-        I
-      </button>
-      <!-- 按钮 7 -->
-      <button class="navigation-button button-7" @click="goToPage('study1.area.II')">
-        II
-      </button>
-      <!-- 按钮 8 -->
-      <button class="navigation-button button-8" @click="goToPage('study1.area.III')">
-        III
-      </button>
-      <!-- 按钮 9 -->
-      <button class="navigation-button button-9" @click="goToPage('study1.area.IV')">
-        IV
-      </button>
-      <!-- 按钮 10 -->
-      <button class="navigation-button button-10" @click="goToPage('study1.area.V')">
-        V
-      </button>
-      <!-- 按钮 11 -->
-      <button class="navigation-button button-11" @click="goToPage('study1.all')">
-        All
-      </button>
+  <article class="integrated-study-card">
+    <div class="study-card-head">
+      <span>{{ $t('integrated_study_type_sc') }}</span>
+      <strong>{{ $t('integrated_study_sc_mouse') }}</strong>
     </div>
-  </div>
+    <p>{{ $t('integrated_desc_sc_mouse') }}</p>
+    <div class="study-stats">
+      <div><span>{{ $t('integrated_label_species') }}</span><strong>{{ $t('integrated_species_mouse') }}</strong></div>
+      <div><span>{{ $t('integrated_label_regions') }}</span><strong>I-V</strong></div>
+      <div><span>{{ $t('integrated_label_conditions') }}</span><strong>5</strong></div>
+      <div><span>{{ $t('integrated_label_route') }}</span><strong>scStudy</strong></div>
+    </div>
+    <div class="study-action-panel">
+      <div class="study-action-section overview">
+        <span class="study-action-label">{{ $t('integrated_action_overview') }}</span>
+        <button class="study-action primary" @click="goToPage('study1.all')">{{ $t('integrated_action_all_samples') }}</button>
+      </div>
+      <div class="study-action-section">
+        <span class="study-action-label">{{ $t('integrated_action_condition') }}</span>
+        <div class="study-action-row">
+          <button v-for="item in conditionActions" :key="item.id" class="study-action" @click="goToPage(item.id)">
+            {{ item.label }}
+          </button>
+        </div>
+      </div>
+      <div class="study-action-section">
+        <span class="study-action-label">{{ $t('integrated_action_brain_region') }}</span>
+        <div class="study-action-row compact">
+          <button v-for="item in regionActions" :key="item.id" class="study-action muted" @click="goToPage(item.id)">
+            {{ item.label }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </article>
 </template>
 
 <script setup>
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
+const conditionActions = [
+  { id: 'study1.conditions.0D', label: '0D Control' },
+  { id: 'study1.conditions.3D', label: '3D' },
+  { id: 'study1.conditions.7D', label: '7D' },
+  { id: 'study1.conditions.S', label: 'Susceptible' },
+  { id: 'study1.conditions.R', label: 'Resilient' },
+];
+const regionActions = ['I', 'II', 'III', 'IV', 'V'].map(region => ({ id: `study1.area.${region}`, label: region }));
 
 const goToPage = (study) => {
-  router.push({ name: 'scStudy', params: { study: study } });
+  router.push({ name: 'scStudy', params: { study } });
 };
 </script>
 
 <style scoped>
-.navigation-container {
-  position: relative;
-  width: 400px;
-  /* 根据图片大小调整 */
-  height: auto;
-  /* 根据图片大小调整 */
+.integrated-study-card {
+  background: var(--ss-surface);
+  border: 1px solid var(--ss-border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  min-height: 100%;
 }
-
-.image-container {
-  position: relative;
-  width: 100%;
-  height: 100%;
-}
-
-.navigation-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  /* 确保图片覆盖整个容器 */
-}
-
-.navigation-button {
-  position: absolute;
-  padding: 5px 10px;
-  background-color: rgba(0, 0, 0, 0.4);
-  /* 半透明背景 */
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-/* 鼠标悬浮时的效果 */
-.navigation-button:hover {
-  background-color: rgba(0, 0, 0, 0.6);
-  /* 悬浮时背景颜色加深 */
-  transform: scale(1.1);
-  /* 放大按钮 */
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-  /* 添加阴影 */
-}
-
-.button-1 {
-  top: 65px;
-  left: 40px;
-}
-
-.button-2 {
-  top: 13px;
-  left: 115px;
-}
-
-.button-3 {
-  top: 65px;
-  left: 160px;
-}
-
-.button-4 {
-  top: 20px;
-  left: 280px;
-}
-
-.button-5 {
-  top: 65px;
-  left: 280px;
-}
-
-.button-6 {
-  bottom: 90px;
-  right: 220px;
-}
-
-.button-7 {
-  bottom: 90px;
-  right: 123px;
-}
-
-.button-8 {
-  bottom: 90px;
-  right: 23px;
-}
-
-.button-9 {
-  bottom: 35px;
-  right: 170px;
-}
-
-.button-10 {
-  bottom: 35px;
-  right: 60px;
-}
-
-.button-11{
-  bottom: 50px;
-  left: 45px;
-}
-
-/* ----------------------------------------------------------- */
-/* 移动端响应 */
-@media (max-width: 800px) {
-  .navigation-button {
-    display: none;
-  }
-}
+.study-card-head { display: grid; gap: 4px; margin-bottom: 8px; }
+.study-card-head span { font-size: 11px; color: var(--ss-text-3); text-transform: uppercase; letter-spacing: .08em; }
+.study-card-head strong { font-size: clamp(15px, 1.35vw, 18px); line-height: 1.25; color: var(--ss-text); font-family: var(--ss-font); font-weight: 700; overflow-wrap: anywhere; }
+p { margin: 0 0 12px; color: var(--ss-text-2); font-size: 13px; line-height: 1.55; }
+.study-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
+.study-stats div { border: 1px solid var(--ss-border-soft); border-radius: 8px; padding: 8px; background: rgba(255,255,255,.55); }
+.study-stats span { display: block; color: var(--ss-text-3); font-size: 10px; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 3px; }
+.study-stats strong { color: var(--ss-text); font-size: 12px; font-family: var(--ss-mono); }
+.study-action-panel { display: grid; gap: 10px; }
+.study-action-section { border: 1px solid var(--ss-border-soft); border-radius: 8px; padding: 9px 10px; background: rgba(248,250,253,.72); }
+.study-action-section.overview { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.study-action-label { display: block; margin-bottom: 7px; color: var(--ss-text-3); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; }
+.study-action-section.overview .study-action-label { margin-bottom: 0; }
+.study-action-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.study-action-row.compact .study-action { min-width: 40px; text-align: center; }
+.study-action { border: 1px solid var(--ss-border); background: white; color: var(--ss-text-2); border-radius: 999px; padding: 5px 10px; font-size: 12px; font-family: var(--ss-font); cursor: pointer; transition: var(--ss-tr-fast); }
+.study-action:hover { border-color: var(--ss-primary); color: var(--ss-primary); background: var(--ss-primary-10); }
+.study-action.primary { background: var(--ss-primary); border-color: var(--ss-primary); color: white; }
+.study-action.muted { color: var(--ss-teal); border-color: rgba(58,138,114,.28); }
+@media (max-width: 900px) { .study-stats { grid-template-columns: repeat(2, 1fr); } }
 </style>

@@ -3,8 +3,11 @@
         <NavigationBar />
         <main class="container">
             <section class="page-section">
-                <div v-if="loading">加载中...</div>
-                <div v-else v-html="content" class="md"></div>
+                <div v-if="loading">{{ $t('doc_loading') }}</div>
+                <template v-else>
+                    <VideoPlayer v-if="isUsage" />
+                    <div v-html="content" class="md"></div>
+                </template>
             </section>
         </main>
         <BackToTop />
@@ -12,10 +15,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useRoute } from "vue-router";
+import { useI18n } from "vue-i18n";
 import BackToTop from "./general/BackToTop.vue";
 import NavigationBar from "./general/NavigationBar.vue";
+import VideoPlayer from "./general/VideoPlayer.vue";
 
 import MarkdownIt from 'markdown-it';
 import hljs from 'highlight.js';
@@ -41,25 +46,35 @@ const md = new MarkdownIt({
 });
 
 const route = useRoute();
+const { t, locale } = useI18n();
 const content = ref("");
 const loading = ref(true);
+const isUsage = computed(() => route.params.name === "Usage");
 
 const loadMarkdown = async (name) => {
     if (!name) {
-        content.value = `<p style="color:red;">文档名称无效</p>`;
+        content.value = `<p style="color:red;">${t('doc_error')}</p>`;
         loading.value = false;
         return;
     }
 
     try {
         loading.value = true;
-        const res = await fetch(`/doc/${name}.md`);
-        if (!res.ok) throw new Error(`文档不存在: ${name}`);
+        // 按当前语言加载对应版本文档：zh-CN 加载 _cn，zh-TW 加载 _tw，缺失时回退英文原版
+        let file = name;
+        const localizedDocs = {
+            'zh-CN': { Methods: "Methods_cn", Usage: "Usage_cn", News: "News_cn" },
+            'zh-TW': { Methods: "Methods_tw", Usage: "Usage_tw", News: "News_tw" }
+        };
+        const docMap = localizedDocs[locale.value] || {};
+        if (docMap[name]) file = docMap[name];
+        const res = await fetch(`/doc/${file}.md`);
+        if (!res.ok) throw new Error(`${file}.md`);
         const text = await res.text();
         content.value = md.render(text);
     } catch (err) {
-        console.error('[DocPage] 加载失败:', err);
-        content.value = `<p style="color:red;">文档加载失败: ${err.message}</p>`;
+        console.error('[DocPage] load failed:', err);
+        content.value = `<p style="color:red;">${t('doc_error')}: ${err.message}</p>`;
     } finally {
         loading.value = false;
     }
@@ -69,6 +84,12 @@ onMounted(() => loadMarkdown(route.params.name));
 watch(() => route.params.name, (newName) => {
     if (newName) {
         loadMarkdown(newName);
+    }
+});
+// 切换语言时重新加载当前文档
+watch(locale, () => {
+    if (route.params.name) {
+        loadMarkdown(route.params.name);
     }
 });
 </script>
