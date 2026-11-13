@@ -175,7 +175,39 @@ To get started, you need to install the project dependencies. Follow these steps
 This will install all necessary dependencies listed in `package.json`.
 
 
-## 2. Build
+## 2. PHP Backend Configuration
+
+The PHP backend reads its real credentials from `php/config.local.php`, which is **not tracked by git**
+(it is listed in `.gitignore`). `php/config.php` only ships placeholders.
+
+1. Create the local config file from the template:
+
+   ```bash
+   cp php/config.local.php.example php/config.local.php
+   chmod 600 php/config.local.php
+   ```
+
+2. Fill in the real values:
+
+   ```php
+   $servername = 'localhost';
+   $dbname     = 'ssmood';
+   $creds      = require '/etc/ssmood/db.php';   // or an inline ['user' => '…', 'pass' => '…']
+   $username   = $creds['user'];
+   $password   = $creds['pass'];
+
+   $openaiApiKey = 'sk-…';                        // OpenAI-compatible API key
+   $url          = 'https://…/v1/chat/completions';
+   $model        = '…';
+   ```
+
+3. `php/config.php` loads `config.local.php` at the end **if it exists**. Without it the backend keeps the
+   placeholder values, so every database / LLM request fails with empty credentials.
+
+> 部署提醒：更新服务器时请**先创建 `config.local.php`，再 `git pull`**，否则数据库与模型配置会是空的。
+> Never commit `php/config.local.php` — use `git add -f` only if you really mean it.
+
+## 3. Build
 
 To create a production build of the application, run the following command:
 
@@ -196,7 +228,7 @@ To create a production build of the application, run the following command:
 This will generate optimized and minified files for production in the `dist/` directory.
 
 
-## 3. Serve
+## 4. Serve
 
 To run the application locally in development mode, follow these steps:
 
